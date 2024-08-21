@@ -389,12 +389,12 @@ resource "oci_core_console_history" "this" {
 resource "oci_core_cpe" "this" {
   count               = length(var.compartment) == 0 ? 0 : length(var.cpe)
   compartment_id      = try(element(module.identity.*.compartment_id, lookup(var.cpe[count.index], "compartment_id")))
-  ip_address          = lookup(varcpe[count.index], "ip_address")
+  ip_address          = lookup(var.cpe[count.index], "ip_address")
   cpe_device_shape_id = try(element(oci_core_cpe.this.*.cpe_device_shape_id, lookup(var.cpe[count.index], "cpe_device_shape_id")))
   defined_tags        = merge(var.defined_tags, lookup(var.cpe[count.index], "defined_tags"))
-  display_name        = lookup(varcpe[count.index], "display_name")
+  display_name        = lookup(var.cpe[count.index], "display_name")
   freeform_tags       = merge(var.freeform_tags, lookup(var.cpe[count.index], "freeform_tags"))
-  is_private          = lookup(varcpe[count.index], "is_private")
+  is_private          = lookup(var.cpe[count.index], "is_private")
 }
 
 resource "oci_core_cross_connect" "this" {
@@ -810,6 +810,585 @@ resource "oci_core_instance_console_connection" "this" {
   public_key    = file(join("/", [path.cwd, "keys", lookup(var.instance_console_connection[count.index], "public_key")]))
   defined_tags  = merge(var.defined_tags, lookup(var.instance_console_connection[count.index], "defined_tags"))
   freeform_tags = merge(var.freeform_tags, lookup(var.instance_console_connection[count.index], "freefor_tags"))
+}
+
+resource "oci_core_instance_configuration" "this" {
+  count          = length(var.compartment) == 0 ? 0 : length(var.instance_configuration)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.instance_configuration[count.index], "compartment_id")))
+  defined_tags   = {}
+  display_name   = lookup(var.instance_configuration[count.index], "display_name")
+  freeform_tags  = {}
+  instance_id    = try(element(oci_core_instance.this.*.id, lookup(var.instance_configuration[count.index], "instance_id")))
+  source         = ""
+
+  dynamic "instance_details" {
+    for_each = try(lookup(var.instance_configuration[count.index], "instance_details") == null ? [] : ["instance_details"])
+    content {
+      instance_type = lookup(instance_details.value, "instance_type")
+
+      dynamic "block_volumes" {
+        for_each = ""
+        content {
+          dynamic "attach_details" {
+            for_each = ""
+            content {
+              type                                = ""
+              device                              = ""
+              display_name                        = ""
+              is_pv_encryption_in_transit_enabled = true
+              is_read_only                        = true
+              is_shareable                        = true
+              use_chap                            = true
+            }
+          }
+
+          dynamic "create_details" {
+            for_each = ""
+            content {
+              availability_domain        = ""
+              backup_policy_id           = ""
+              cluster_placement_group_id = ""
+              compartment_id             = ""
+              defined_tags               = {}
+              display_name               = ""
+              freeform_tags              = {}
+              is_auto_tune_enabled       = true
+              kms_key_id                 = ""
+              size_in_gbs                = ""
+              vpus_per_gb                = ""
+
+              dynamic "autotune_policies" {
+                for_each = ""
+                content {
+                  autotune_type   = ""
+                  max_vpus_per_gb = ""
+                }
+              }
+
+              dynamic "block_volume_replicas" {
+                for_each = ""
+                content {
+                  availability_domain = ""
+                  display_name        = ""
+                }
+              }
+
+              dynamic "source_details" {
+                for_each = ""
+                content {
+                  type = ""
+                }
+              }
+            }
+          }
+        }
+      }
+
+      dynamic "launch_details" {
+        for_each = ""
+        content {
+          availability_domain                 = ""
+          capacity_reservation_id             = ""
+          cluster_placement_group_id          = ""
+          compartment_id                      = ""
+          dedicated_vm_host_id                = ""
+          defined_tags                        = ""
+          display_name                        = ""
+          extended_metadata                   = {}
+          fault_domain                        = ""
+          freeform_tags                       = {}
+          ipxe_script                         = ""
+          is_pv_encryption_in_transit_enabled = true
+          launch_mode                         = ""
+          metadata                            = {}
+          preferred_maintenance_action        = ""
+          shape                               = ""
+
+          dynamic "agent_config" {
+            for_each = try(lookup(launch_details.value, "agent_config") == null ? [] : ["agent_config"])
+            iterator = agent
+            content {
+              are_all_plugins_disabled = lookup(agent.value, "are_all_plugins_disabled")
+              is_management_disabled   = lookup(agent.value, "is_management_disabled")
+              is_monitoring_disabled   = lookup(agent.value, "is_monitoring_disabled")
+
+              dynamic "plugins_config" {
+                for_each = try(lookup(agent.value, "plugins_config") == null ? [] : ["plugins_config"])
+                content {
+                  desired_state = lookup(plugins_config.value, "desired_state")
+                  name          = lookup(plugins_config.value, "name")
+                }
+              }
+            }
+          }
+
+          dynamic "availability_config" {
+            for_each = try(lookup(launch_details.value, "availability_config") == null ? [] : ["availability_config"])
+            iterator = availability
+            content {
+              is_live_migration_preferred = lookup(availability.value, "is_live_migration_preferred")
+              recovery_action             = lookup(availability.value, "recovery_action")
+            }
+          }
+
+          dynamic "create_vnic_details" {
+            for_each = try(lookup(launch_details.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
+            iterator = vnic
+            content {
+              assign_ipv6ip             = lookup(vnic.value, "assign_ipv6ip")
+              assign_private_dns_record = lookup(vnic.value, "assign_private_dns_record")
+              assign_public_ip          = lookup(vnic.value, "assign_public_ip")
+              defined_tags              = merge(var.defined_tags, lookup(vnic.value, "defined_tags"))
+              display_name              = lookup(vnic.value, "display_name")
+              freeform_tags             = merge(var.freeform_tags, lookup(vnic.value, "freeform_tags"))
+              hostname_label            = lookup(vnic.value, "hostname_label")
+              nsg_ids                   = lookup(vnic.value, "nsg_ids")
+              private_ip                = lookup(vnic.value, "private_ip")
+              skip_source_dest_check    = lookup(vnic.value, "skip_source_dest_check")
+              subnet_id                 = try(element(oci_core_subnet.this.*.id, lookup(vnic.value, "subnet_id")))
+              #vlan_id                   = try(element(oci_core_vlan.this.*.id, lookup(vnic.value, "vlan_id")))
+            }
+          }
+
+          dynamic "instance_options" {
+            for_each = try(lookup(launch_details.value, "instance_options") == null ? [] : ["instance_options"])
+            iterator = instance
+            content {
+              are_legacy_imds_endpoints_disabled = lookup(instance.value, "are_legacy_imds_endpoints_disabled")
+            }
+          }
+
+          dynamic "launch_options" {
+            for_each = try(lookup(launch_details.value, "launch_options") == null ? [] : ["launch_options"])
+            iterator = launch
+            content {
+              boot_volume_type                    = lookup(launch.value, "boot_volume_type")
+              firmware                            = lookup(launch.value, "firmware")
+              is_consistent_volume_naming_enabled = lookup(launch.value, "is_consistent_volume_naming_enabled")
+              is_pv_encryption_in_transit_enabled = lookup(launch.value, "is_pv_encryption_in_transit_enabled")
+              network_type                        = lookup(launch.value, "network_type")
+              remote_data_volume_type             = lookup(launch.value, "remote_data_volume_type")
+            }
+          }
+
+          dynamic "launch_volume_attachments" {
+            for_each = try(lookup(launch_details.value, "launch_volume_attachments") == null ? [] : ["launch_volume_attachments"])
+            iterator = volume
+            content {
+              type                              = lookup(volume.value, "type")
+              device                            = lookup(volume.value, "device")
+              display_name                      = lookup(volume.value, "display_name")
+              encryption_in_transit_type        = lookup(volume.value, "encryption_in_transit_type")
+              is_agent_auto_iscsi_login_enabled = lookup(volume.value, "is_agent_auto_iscsi_login_enabled")
+              is_read_only                      = lookup(volume.value, "is_read_only")
+              is_shareable                      = lookup(volume.value, "is_shareable")
+              use_chap                          = lookup(volume.value, "use_chap")
+              volume_id                         = try(element(oci_core_boot_volume.this.*.id, lookup(volume.value, "volume_id")))
+
+              dynamic "launch_create_volume_details" {
+                for_each = try(lookup(volume.value, "launch_create_volume_details") == null ? [] : ["launch_create_volume_details"])
+                iterator = details
+                content {
+                  size_in_gbs          = lookup(details.value, "size_in_gbs")
+                  volume_creation_type = lookup(details.value, "volume_creation_type")
+                  compartment_id       = try(element(module.identity.*.compartment_id, lookup(details.value, "compartment_id")))
+                  display_name         = lookup(details.value, "display_name")
+                  kms_key_id           = try(element(module.kms.*.key_id, lookup(details.value, "kms_key_id")))
+                  vpus_per_gb          = lookup(details.value, "vpus_per_gb")
+                }
+              }
+            }
+          }
+
+          dynamic "platform_config" {
+            for_each = try(lookup(launch_details.value, "platform_config") == null ? [] : ["platform_config"])
+            iterator = platform
+            content {
+              type                                           = lookup(platform.value, "type")
+              are_virtual_instructions_enabled               = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" ? lookup(platform.value, "are_virtual_instructions_enabled") : null
+              config_map                                     = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "config_map") : null
+              is_access_control_service_enabled              = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" ? lookup(platform.value, "is_access_control_service_enabled") : null
+              is_input_output_memory_management_unit_enabled = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "is_input_output_memory_management_unit_enabled") : null
+              is_measured_boot_enabled                       = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" || lookup(platform.value, "type") == "INTEL_VM" ? lookup(platform.value, "is_measured_boot_enabled") : null
+              is_memory_encryption_enabled                   = lookup(platform.value, "is_memory_encryption_enabled")
+              is_secure_boot_enabled                         = lookup(platform.value, "is_secure_boot_enabled")
+              is_symmetric_multi_threading_enabled           = lookup(platform.value, "is_symmetric_multi_threading_enabled")
+              is_trusted_platform_module_enabled             = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "is_trusted_platform_module_enabled") : null
+              numa_nodes_per_socket                          = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "numa_nodes_per_socket") : null
+              percentage_of_cores_enabled                    = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "percentage_of_cores_enabled") : null
+            }
+          }
+
+          dynamic "preemptible_instance_config" {
+            for_each = try(lookup(launch_details.value, "preemptible_instance_config") == null ? [] : ["preemptible_instance_config"])
+            iterator = preemptible
+            content {
+              dynamic "preemption_action" {
+                for_each = lookup(preemptible.value, "preemption_action")
+                iterator = action
+                content {
+                  type                 = lookup(action.value, "type")
+                  preserve_boot_volume = lookup(action.value, "preserve_boot_volume")
+                }
+              }
+            }
+          }
+
+          dynamic "shape_config" {
+            for_each = try(lookup(launch_details.value, "shape_config") == null ? [] : ["shape_config"])
+            iterator = shape
+            content {
+              baseline_ocpu_utilization = lookup(shape.value, "baseline_ocpu_utilization")
+              memory_in_gbs             = lookup(shape.value, "memory_in_gbs")
+              nvmes                     = lookup(shape.value, "nvmes")
+              ocpus                     = lookup(shape.value, "ocpus")
+              vcpus                     = lookup(shape.value, "vcpus")
+            }
+          }
+
+          dynamic "source_details" {
+            for_each = try(lookup(launch_details.value, "source_details") == null ? [] : ["source_details"])
+            iterator = source
+            content {
+              source_type = lookup(source.value, "source_type")
+              #source_id                       = try(element(oci_core_image.this.*.id, lookup(source.value, "image_id")))
+              boot_volume_size_in_gbs = lookup(source.value, "boot_volume_size_in_gbs")
+              boot_volume_vpus_per_gb = lookup(source.value, "boot_volume_vpus_per_gb")
+              kms_key_id              = try(element(module.kms.*.key_id, lookup(source.value, "kms_key_id")))
+              #is_preserve_boot_volume_enabled = lookup(source.value, "is_preserve_boot_volume_enabled")
+
+              dynamic "instance_source_image_filter_details" {
+                for_each = try(lookup(source.value, "instance_source_image_filter_details") == null ? [] : ["instance_source_image_filter_details"])
+                iterator = filter
+                content {
+                  compartment_id           = try(element(module.identity.*.compartment_id, lookup(filter.value, "compartment_id")))
+                  defined_tags_filter      = lookup(filter.value, "defined_tags_filter")
+                  operating_system         = lookup(filter.value, "operating_system")
+                  operating_system_version = lookup(filter.value, "operating_system_version")
+                }
+              }
+            }
+          }
+        }
+      }
+
+      dynamic "options" {
+        for_each = ""
+        content {
+          dynamic "block_volumes" {
+            for_each = ""
+            content {
+              volume_id = ""
+
+              dynamic "attach_details" {
+                for_each = ""
+                content {
+                  type                                = ""
+                  device                              = ""
+                  display_name                        = ""
+                  is_pv_encryption_in_transit_enabled = true
+                  is_read_only                        = true
+                  is_shareable                        = true
+                  use_chap                            = true
+                }
+              }
+
+              dynamic "create_details" {
+                for_each = ""
+                content {
+                  availability_domain        = ""
+                  backup_policy_id           = ""
+                  cluster_placement_group_id = ""
+                  compartment_id             = ""
+                  defined_tags               = {}
+                  display_name               = ""
+                  freeform_tags              = {}
+                  is_auto_tune_enabled       = true
+                  kms_key_id                 = ""
+                  size_in_gbs                = ""
+                  vpus_per_gb                = ""
+
+                  dynamic "autotune_policies" {
+                    for_each = ""
+                    content {
+                      autotune_type   = ""
+                      max_vpus_per_gb = ""
+                    }
+                  }
+
+                  dynamic "block_volume_replicas" {
+                    for_each = ""
+                    content {
+                      availability_domain = ""
+                      display_name        = ""
+                    }
+                  }
+
+                  dynamic "source_details" {
+                    for_each = ""
+                    content {
+                      type = ""
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          dynamic "launch_details" {
+            for_each = ""
+            content {
+              availability_domain                 = ""
+              capacity_reservation_id             = ""
+              cluster_placement_group_id          = ""
+              compartment_id                      = ""
+              dedicated_vm_host_id                = ""
+              defined_tags                        = ""
+              display_name                        = ""
+              extended_metadata                   = {}
+              fault_domain                        = ""
+              freeform_tags                       = {}
+              ipxe_script                         = ""
+              is_pv_encryption_in_transit_enabled = true
+              launch_mode                         = ""
+              metadata                            = {}
+              preferred_maintenance_action        = ""
+              shape                               = ""
+
+              dynamic "agent_config" {
+                for_each = try(lookup(launch_details.value, "agent_config") == null ? [] : ["agent_config"])
+                iterator = agent
+                content {
+                  are_all_plugins_disabled = lookup(agent.value, "are_all_plugins_disabled")
+                  is_management_disabled   = lookup(agent.value, "is_management_disabled")
+                  is_monitoring_disabled   = lookup(agent.value, "is_monitoring_disabled")
+
+                  dynamic "plugins_config" {
+                    for_each = try(lookup(agent.value, "plugins_config") == null ? [] : ["plugins_config"])
+                    content {
+                      desired_state = lookup(plugins_config.value, "desired_state")
+                      name          = lookup(plugins_config.value, "name")
+                    }
+                  }
+                }
+              }
+
+              dynamic "availability_config" {
+                for_each = try(lookup(launch_details.value, "availability_config") == null ? [] : ["availability_config"])
+                iterator = availability
+                content {
+                  is_live_migration_preferred = lookup(availability.value, "is_live_migration_preferred")
+                  recovery_action             = lookup(availability.value, "recovery_action")
+                }
+              }
+
+              dynamic "create_vnic_details" {
+                for_each = try(lookup(launch_details.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
+                iterator = vnic
+                content {
+                  assign_ipv6ip             = lookup(vnic.value, "assign_ipv6ip")
+                  assign_private_dns_record = lookup(vnic.value, "assign_private_dns_record")
+                  assign_public_ip          = lookup(vnic.value, "assign_public_ip")
+                  defined_tags              = merge(var.defined_tags, lookup(vnic.value, "defined_tags"))
+                  display_name              = lookup(vnic.value, "display_name")
+                  freeform_tags             = merge(var.freeform_tags, lookup(vnic.value, "freeform_tags"))
+                  hostname_label            = lookup(vnic.value, "hostname_label")
+                  nsg_ids                   = lookup(vnic.value, "nsg_ids")
+                  private_ip                = lookup(vnic.value, "private_ip")
+                  skip_source_dest_check    = lookup(vnic.value, "skip_source_dest_check")
+                  subnet_id                 = try(element(oci_core_subnet.this.*.id, lookup(vnic.value, "subnet_id")))
+                  #vlan_id                   = try(element(oci_core_vlan.this.*.id, lookup(vnic.value, "vlan_id")))
+                }
+              }
+
+              dynamic "instance_options" {
+                for_each = try(lookup(launch_details.value, "instance_options") == null ? [] : ["instance_options"])
+                iterator = instance
+                content {
+                  are_legacy_imds_endpoints_disabled = lookup(instance.value, "are_legacy_imds_endpoints_disabled")
+                }
+              }
+
+              dynamic "launch_options" {
+                for_each = try(lookup(launch_details.value, "launch_options") == null ? [] : ["launch_options"])
+                iterator = launch
+                content {
+                  boot_volume_type                    = lookup(launch.value, "boot_volume_type")
+                  firmware                            = lookup(launch.value, "firmware")
+                  is_consistent_volume_naming_enabled = lookup(launch.value, "is_consistent_volume_naming_enabled")
+                  is_pv_encryption_in_transit_enabled = lookup(launch.value, "is_pv_encryption_in_transit_enabled")
+                  network_type                        = lookup(launch.value, "network_type")
+                  remote_data_volume_type             = lookup(launch.value, "remote_data_volume_type")
+                }
+              }
+
+              dynamic "launch_volume_attachments" {
+                for_each = try(lookup(launch_details.value, "launch_volume_attachments") == null ? [] : ["launch_volume_attachments"])
+                iterator = volume
+                content {
+                  type                              = lookup(volume.value, "type")
+                  device                            = lookup(volume.value, "device")
+                  display_name                      = lookup(volume.value, "display_name")
+                  encryption_in_transit_type        = lookup(volume.value, "encryption_in_transit_type")
+                  is_agent_auto_iscsi_login_enabled = lookup(volume.value, "is_agent_auto_iscsi_login_enabled")
+                  is_read_only                      = lookup(volume.value, "is_read_only")
+                  is_shareable                      = lookup(volume.value, "is_shareable")
+                  use_chap                          = lookup(volume.value, "use_chap")
+                  volume_id                         = try(element(oci_core_boot_volume.this.*.id, lookup(volume.value, "volume_id")))
+
+                  dynamic "launch_create_volume_details" {
+                    for_each = try(lookup(volume.value, "launch_create_volume_details") == null ? [] : ["launch_create_volume_details"])
+                    iterator = details
+                    content {
+                      size_in_gbs          = lookup(details.value, "size_in_gbs")
+                      volume_creation_type = lookup(details.value, "volume_creation_type")
+                      compartment_id       = try(element(module.identity.*.compartment_id, lookup(details.value, "compartment_id")))
+                      display_name         = lookup(details.value, "display_name")
+                      kms_key_id           = try(element(module.kms.*.key_id, lookup(details.value, "kms_key_id")))
+                      vpus_per_gb          = lookup(details.value, "vpus_per_gb")
+                    }
+                  }
+                }
+              }
+
+              dynamic "platform_config" {
+                for_each = try(lookup(launch_details.value, "platform_config") == null ? [] : ["platform_config"])
+                iterator = platform
+                content {
+                  type                             = lookup(platform.value, "type")
+                  are_virtual_instructions_enabled = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" ? lookup(platform.value, "are_virtual_instructions_enabled") : null
+                  #config_map                                     = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "config_map") : null
+                  is_access_control_service_enabled              = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" ? lookup(platform.value, "is_access_control_service_enabled") : null
+                  is_input_output_memory_management_unit_enabled = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "is_input_output_memory_management_unit_enabled") : null
+                  is_measured_boot_enabled                       = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" || lookup(platform.value, "type") == "INTEL_VM" ? lookup(platform.value, "is_measured_boot_enabled") : null
+                  is_memory_encryption_enabled                   = lookup(platform.value, "is_memory_encryption_enabled")
+                  is_secure_boot_enabled                         = lookup(platform.value, "is_secure_boot_enabled")
+                  is_symmetric_multi_threading_enabled           = lookup(platform.value, "is_symmetric_multi_threading_enabled")
+                  is_trusted_platform_module_enabled             = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_MILAN_BM_GPU" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "is_trusted_platform_module_enabled") : null
+                  numa_nodes_per_socket                          = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "AMD_ROME_BM_GPU" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "numa_nodes_per_socket") : null
+                  percentage_of_cores_enabled                    = lookup(platform.value, "type") == "AMD_MILAN_BM" || lookup(platform.value, "type") == "AMD_ROME_BM" || lookup(platform.value, "type") == "GENERIC_BM" || lookup(platform.value, "type") == "INTEL_ICELAKE_BM" || lookup(platform.value, "type") == "INTEL_SKYLAKE_BM" ? lookup(platform.value, "percentage_of_cores_enabled") : null
+                }
+              }
+
+              dynamic "preemptible_instance_config" {
+                for_each = try(lookup(launch_details.value, "preemptible_instance_config") == null ? [] : ["preemptible_instance_config"])
+                iterator = preemptible
+                content {
+                  dynamic "preemption_action" {
+                    for_each = lookup(preemptible.value, "preemption_action")
+                    iterator = action
+                    content {
+                      type                 = lookup(action.value, "type")
+                      preserve_boot_volume = lookup(action.value, "preserve_boot_volume")
+                    }
+                  }
+                }
+              }
+
+              dynamic "shape_config" {
+                for_each = try(lookup(launch_details.value, "shape_config") == null ? [] : ["shape_config"])
+                iterator = shape
+                content {
+                  baseline_ocpu_utilization = lookup(shape.value, "baseline_ocpu_utilization")
+                  memory_in_gbs             = lookup(shape.value, "memory_in_gbs")
+                  nvmes                     = lookup(shape.value, "nvmes")
+                  ocpus                     = lookup(shape.value, "ocpus")
+                  vcpus                     = lookup(shape.value, "vcpus")
+                }
+              }
+
+              dynamic "source_details" {
+                for_each = try(lookup(launch_details.value, "source_details") == null ? [] : ["source_details"])
+                iterator = source
+                content {
+                  source_type = lookup(source.value, "source_type")
+                  #source_id                       = try(element(oci_core_image.this.*.id, lookup(source.value, "image_id")))
+                  boot_volume_size_in_gbs = lookup(source.value, "boot_volume_size_in_gbs")
+                  boot_volume_vpus_per_gb = lookup(source.value, "boot_volume_vpus_per_gb")
+                  kms_key_id              = try(element(module.kms.*.key_id, lookup(source.value, "kms_key_id")))
+                  #is_preserve_boot_volume_enabled = lookup(source.value, "is_preserve_boot_volume_enabled")
+
+                  dynamic "instance_source_image_filter_details" {
+                    for_each = try(lookup(source.value, "instance_source_image_filter_details") == null ? [] : ["instance_source_image_filter_details"])
+                    iterator = filter
+                    content {
+                      compartment_id           = try(element(module.identity.*.compartment_id, lookup(filter.value, "compartment_id")))
+                      defined_tags_filter      = lookup(filter.value, "defined_tags_filter")
+                      operating_system         = lookup(filter.value, "operating_system")
+                      operating_system_version = lookup(filter.value, "operating_system_version")
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          dynamic "secondary_vnics" {
+            for_each = ""
+            content {
+              display_name = ""
+              nic_index    = 0
+
+              dynamic "create_vnic_details" {
+                for_each = ""
+                content {
+                  assign_ipv6ip             = true
+                  assign_private_dns_record = true
+                  assign_public_ip          = true
+                  defined_tags              = {}
+                  display_name              = ""
+                  freeform_tags             = {}
+                  hostname_label            = ""
+                  nsg_ids                   = []
+                  private_ip                = ""
+                  skip_source_dest_check    = true
+                  subnet_id                 = ""
+
+                  dynamic "ipv6address_ipv6subnet_cidr_pair_details" {
+                    for_each = ""
+                    content {
+                      ipv6subnet_cidr = ""
+                      ipv6address     = ""
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      dynamic "secondary_vnics" {
+        for_each = ""
+        content {
+          dynamic "create_vnic_details" {
+            for_each = ""
+            content {
+              assign_ipv6ip             = true
+              assign_private_dns_record = true
+              assign_public_ip          = true
+              defined_tags              = {}
+              display_name              = ""
+              freeform_tags             = {}
+              hostname_label            = ""
+              nsg_ids                   = []
+              private_ip                = ""
+              skip_source_dest_check    = true
+              subnet_id                 = ""
+
+              dynamic "ipv6address_ipv6subnet_cidr_pair_details" {
+                for_each = ""
+                content {
+                  ipv6subnet_cidr = ""
+                  ipv6address     = ""
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 resource "oci_core_instance_pool" "this" {

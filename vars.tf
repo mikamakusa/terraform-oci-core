@@ -778,9 +778,372 @@ variable "instance_console_connection" {
   default = []
 }
 
+variable "instance_configuration" {
+  type = list(object({
+    id             = number
+    compartment_id = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
+    instance_id    = any
+    source         = optional(string)
+    instance_details = optional(list(object({
+      instance_type = string
+      block_volumes = optional(list(object({
+        attach_details = optional(list(object({
+          type                                = string
+          device                              = optional(string)
+          display_name                        = optional(string)
+          is_pv_encryption_in_transit_enabled = optional(bool)
+          is_read_only                        = optional(bool)
+          is_shareable                        = optional(bool)
+          use_chap                            = optional(bool)
+        })))
+        create_details = optional(list(object({
+          availability_domain        = optional(string)
+          backup_policy_id           = optional(any)
+          cluster_placement_group_id = optional(any)
+          compartment_id             = optional(any)
+          defined_tags               = optional(map(string))
+          display_name               = optional(string)
+          freeform_tags              = optional(map(string))
+          is_auto_tune_enabled       = optional(bool)
+          kms_key_id                 = optional(any)
+          size_in_gbs                = optional(string)
+          vpus_per_gb                = optional(string)
+          autotune_policies = optional(list(object({
+            autotune_type   = string
+            max_vpus_per_gb = optional(string)
+          })))
+          block_volume_replicas = optional(list(object({
+            availability_domain = string
+            display_name        = optional(string)
+          })))
+          source_details = optional(list(object({
+            type = string
+          })))
+        })))
+      })))
+      launch_details = optional(list(object({
+        availability_domain                 = optional(string)
+        capacity_reservation_id             = optional(any)
+        cluster_placement_group_id          = optional(any)
+        compartment_id                      = optional(any)
+        dedicated_vm_host_id                = optional(any)
+        defined_tags                        = optional(string)
+        display_name                        = optional(string)
+        extended_metadata                   = optional(map(string))
+        fault_domain                        = optional(string)
+        freeform_tags                       = optional(map(string))
+        ipxe_script                         = optional(string)
+        is_pv_encryption_in_transit_enabled = optional(bool)
+        launch_mode                         = optional(string)
+        metadata                            = optional(map(string))
+        preferred_maintenance_action        = optional(string)
+        shape                               = optional(string)
+        agent_config = optional(list(object({
+          are_all_plugins_disabled = optional(bool)
+          is_management_disabled   = optional(bool)
+          is_monitoring_disabled   = optional(bool)
+          plugins_config = optional(list(object({
+            desired_state = string
+            name          = string
+          })))
+        })))
+        availability_config = optional(list(object({
+          is_live_migration_preferred = optional(bool)
+          recovery_action             = optional(string)
+        })))
+        create_vnic_details = optional(list(object({
+          assign_ipv6ip             = optional(bool)
+          assign_private_dns_record = optional(bool)
+          assign_public_ip          = optional(string)
+          defined_tags              = optional(map(string))
+          display_name              = optional(string)
+          freeform_tags             = optional(map(string))
+          hostname_label            = optional(string)
+          nsg_ids                   = optional(list(string))
+          private_ip                = optional(string)
+          skip_source_dest_check    = optional(bool)
+          subnet_id                 = optional(any)
+          vlan_id                   = optional(any)
+        })))
+        instance_options = optional(list(object({
+          are_legacy_imds_endpoints_disabled = optional(bool)
+        })))
+        launch_options = optional(list(object({
+          boot_volume_type                    = optional(string)
+          firmware                            = optional(string)
+          is_consistent_volume_naming_enabled = optional(bool)
+          is_pv_encryption_in_transit_enabled = optional(bool)
+          network_type                        = optional(string)
+          remote_data_volume_type             = optional(string)
+        })))
+        launch_volume_attachments = optional(list(object({
+          type                              = string
+          device                            = optional(string)
+          display_name                      = optional(string)
+          encryption_in_transit_type        = optional(string)
+          is_agent_auto_iscsi_login_enabled = optional(bool)
+          is_read_only                      = optional(bool)
+          is_shareable                      = optional(bool)
+          use_chap                          = optional(bool)
+          volume_id                         = optional(string)
+          launch_create_volume_details = optional(list(object({
+            size_in_gbs          = optional(string)
+            volume_creation_type = optional(string)
+            compartment_id       = optional(any)
+            display_name         = optional(string)
+            kms_key_id           = optional(any)
+            vpus_per_gb          = optional(string)
+          })))
+        })))
+        platform_config = optional(list(object({
+          type                                           = string
+          are_virtual_instructions_enabled               = optional(bool)
+          config_map                                     = optional(map(string))
+          is_access_control_service_enabled              = optional(bool)
+          is_input_output_memory_management_unit_enabled = optional(bool)
+          is_measured_boot_enabled                       = optional(bool)
+          is_memory_encryption_enabled                   = optional(bool)
+          is_secure_boot_enabled                         = optional(bool)
+          is_symmetric_multi_threading_enabled           = optional(bool)
+          is_trusted_platform_module_enabled             = optional(bool)
+          numa_nodes_per_socket                          = optional(string)
+          percentage_of_cores_enabled                    = optional(number)
+        })))
+        preemptible_instance_config = optional(list(object({
+          preemption_action = list(object({
+            type                 = string
+            preserve_boot_volume = optional(bool)
+          }))
+        })))
+        shape_config = optional(list(object({
+          baseline_ocpu_utilization = optional(string)
+          memory_in_gbs             = optional(number)
+          nvmes                     = optional(number)
+          ocpus                     = optional(number)
+          vcpus                     = optional(number)
+        })))
+        source_details = optional(list(object({
+          source_type                     = string
+          source_type                     = optional(string)
+          source_id                       = optional(string)
+          boot_volume_size_in_gbs         = optional(string)
+          boot_volume_vpus_per_gb         = optional(string)
+          kms_key_id                      = optional(string)
+          is_preserve_boot_volume_enabled = optional(bool)
+          instance_source_image_filter_details = optional(list(object({
+            compartment_id           = any
+            defined_tags_filter      = optional(map(string))
+            operating_system         = optional(string)
+            operating_system_version = optional(string)
+          })))
+        })))
+      })))
+      options = optional(list(object({
+        block_volumes = optional(list(object({
+          attach_details = optional(list(object({
+            type                                = string
+            device                              = optional(string)
+            display_name                        = optional(string)
+            is_pv_encryption_in_transit_enabled = optional(bool)
+            is_read_only                        = optional(bool)
+            is_shareable                        = optional(bool)
+            use_chap                            = optional(bool)
+          })))
+          create_details = optional(list(object({
+            availability_domain        = optional(string)
+            backup_policy_id           = optional(any)
+            cluster_placement_group_id = optional(any)
+            compartment_id             = optional(any)
+            defined_tags               = optional(map(string))
+            display_name               = optional(string)
+            freeform_tags              = optional(map(string))
+            is_auto_tune_enabled       = optional(bool)
+            kms_key_id                 = optional(any)
+            size_in_gbs                = optional(string)
+            vpus_per_gb                = optional(string)
+            autotune_policies = optional(list(object({
+              autotune_type   = string
+              max_vpus_per_gb = optional(string)
+            })))
+            block_volume_replicas = optional(list(object({
+              availability_domain = string
+              display_name        = optional(string)
+            })))
+            source_details = optional(list(object({
+              type = string
+            })))
+          })))
+        })))
+        launch_details = optional(list(object({
+          availability_domain                 = optional(string)
+          capacity_reservation_id             = optional(any)
+          cluster_placement_group_id          = optional(any)
+          compartment_id                      = optional(any)
+          dedicated_vm_host_id                = optional(any)
+          defined_tags                        = optional(string)
+          display_name                        = optional(string)
+          extended_metadata                   = optional(map(string))
+          fault_domain                        = optional(string)
+          freeform_tags                       = optional(map(string))
+          ipxe_script                         = optional(string)
+          is_pv_encryption_in_transit_enabled = optional(bool)
+          launch_mode                         = optional(string)
+          metadata                            = optional(map(string))
+          preferred_maintenance_action        = optional(string)
+          shape                               = optional(string)
+          agent_config = optional(list(object({
+            are_all_plugins_disabled = optional(bool)
+            is_management_disabled   = optional(bool)
+            is_monitoring_disabled   = optional(bool)
+            plugins_config = optional(list(object({
+              desired_state = string
+              name          = string
+            })))
+          })))
+          availability_config = optional(list(object({
+            is_live_migration_preferred = optional(bool)
+            recovery_action             = optional(string)
+          })))
+          create_vnic_details = optional(list(object({
+            assign_ipv6ip             = optional(bool)
+            assign_private_dns_record = optional(bool)
+            assign_public_ip          = optional(string)
+            defined_tags              = optional(map(string))
+            display_name              = optional(string)
+            freeform_tags             = optional(map(string))
+            hostname_label            = optional(string)
+            nsg_ids                   = optional(list(string))
+            private_ip                = optional(string)
+            skip_source_dest_check    = optional(bool)
+            subnet_id                 = optional(any)
+            vlan_id                   = optional(any)
+          })))
+          instance_options = optional(list(object({
+            are_legacy_imds_endpoints_disabled = optional(bool)
+          })))
+          launch_options = optional(list(object({
+            boot_volume_type                    = optional(string)
+            firmware                            = optional(string)
+            is_consistent_volume_naming_enabled = optional(bool)
+            is_pv_encryption_in_transit_enabled = optional(bool)
+            network_type                        = optional(string)
+            remote_data_volume_type             = optional(string)
+          })))
+          launch_volume_attachments = optional(list(object({
+            type                              = string
+            device                            = optional(string)
+            display_name                      = optional(string)
+            encryption_in_transit_type        = optional(string)
+            is_agent_auto_iscsi_login_enabled = optional(bool)
+            is_read_only                      = optional(bool)
+            is_shareable                      = optional(bool)
+            use_chap                          = optional(bool)
+            volume_id                         = optional(string)
+            launch_create_volume_details = optional(list(object({
+              size_in_gbs          = optional(string)
+              volume_creation_type = optional(string)
+              compartment_id       = optional(any)
+              display_name         = optional(string)
+              kms_key_id           = optional(any)
+              vpus_per_gb          = optional(string)
+            })))
+          })))
+          platform_config = optional(list(object({
+            type                                           = string
+            are_virtual_instructions_enabled               = optional(bool)
+            config_map                                     = optional(map(string))
+            is_access_control_service_enabled              = optional(bool)
+            is_input_output_memory_management_unit_enabled = optional(bool)
+            is_measured_boot_enabled                       = optional(bool)
+            is_memory_encryption_enabled                   = optional(bool)
+            is_secure_boot_enabled                         = optional(bool)
+            is_symmetric_multi_threading_enabled           = optional(bool)
+            is_trusted_platform_module_enabled             = optional(bool)
+            numa_nodes_per_socket                          = optional(string)
+            percentage_of_cores_enabled                    = optional(number)
+          })))
+          preemptible_instance_config = optional(list(object({
+            preemption_action = list(object({
+              type                 = string
+              preserve_boot_volume = optional(bool)
+            }))
+          })))
+          shape_config = optional(list(object({
+            baseline_ocpu_utilization = optional(string)
+            memory_in_gbs             = optional(number)
+            nvmes                     = optional(number)
+            ocpus                     = optional(number)
+            vcpus                     = optional(number)
+          })))
+          source_details = optional(list(object({
+            source_type                     = string
+            source_type                     = optional(string)
+            source_id                       = optional(string)
+            boot_volume_size_in_gbs         = optional(string)
+            boot_volume_vpus_per_gb         = optional(string)
+            kms_key_id                      = optional(string)
+            is_preserve_boot_volume_enabled = optional(bool)
+            instance_source_image_filter_details = optional(list(object({
+              compartment_id           = any
+              defined_tags_filter      = optional(map(string))
+              operating_system         = optional(string)
+              operating_system_version = optional(string)
+            })))
+          })))
+        })))
+        secondary_vnics = optional(list(object({
+          create_vnic_details = optional(list(object({
+            assign_ipv6ip             = optional(bool)
+            assign_private_dns_record = optional(bool)
+            assign_public_ip          = optional(bool)
+            defined_tags              = optional(map(string))
+            display_name              = optional(string)
+            freeform_tags             = optional(map(string))
+            hostname_label            = optional(string)
+            nsg_ids                   = optional(list(string))
+            private_ip                = optional(string)
+            skip_source_dest_check    = optional(bool)
+            subnet_id                 = optional(string)
+            ipv6address_ipv6subnet_cidr_pair_details = optional(list(object({
+              ipv6subnet_cidr = optional(string)
+              ipv6address     = optional(string)
+            })))
+          })))
+        })))
+      })))
+      secondary_vnics = optional(list(object({
+        assign_ipv6ip             = optional(bool)
+        assign_private_dns_record = optional(bool)
+        assign_public_ip          = optional(bool)
+        defined_tags              = optional(map(string))
+        display_name              = optional(string)
+        freeform_tags             = optional(map(string))
+        hostname_label            = optional(string)
+        nsg_ids                   = optional(list(string))
+        private_ip                = optional(string)
+        skip_source_dest_check    = optional(bool)
+        subnet_id                 = optional(string)
+        ipv6address_ipv6subnet_cidr_pair_details = optional(list(object({
+          ipv6subnet_cidr = optional(string)
+          ipv6address     = optional(string)
+        })))
+      })))
+    })))
+  }))
+}
+
 variable "instance_pool" {
   type = list(object({
-    id = number
+    id                        = number
+    compartment_id            = any
+    instance_configuration_id = any
+    size                      = number
+    placement_configuration = list(object({
+      availability_domaine = string
+    }))
   }))
   default = []
 }

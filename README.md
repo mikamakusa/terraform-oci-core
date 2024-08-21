@@ -21,43 +21,111 @@
 
 ```mermaid
 flowchart LR
-module.identity ---> oci_core_app_catalog_listing_resource_version_agreement
-oci_core_app_catalog_listing_resource_version_agreement ---> oci_core_app_catalog_subscription
-module.identity ---> oci_core_boot_volume ---> module.kms
-oci_core_app_catalog_listing_resource_version_agreement ---> oci_core_boot_volume
-oci_core_boot_volume ---> oci_core_boot_volume_backup ---> module.kms
-module.identity ---> oci_core_boot_volume_backup
-module.identity ---> oci_core_capture_filter
-module.identity ---> oci_core_cluster_network
-module.identity ---> oci_core_compute_capacity_report
-module.identity ---> oci_core_compute_capacity_reservation
-module.identity ---> oci_core_compute_capacity_topology
-module.identity ---> oci_core_compute_cluster
-module.identity ---> oci_core_compute_image_capability_schema
-module.identity ---> oci_core_cpe
-module.identity ---> oci_core_cross_connect
-module.identity ---> oci_core_cross_connect_group
-module.identity ---> oci_core_dedicated_vm_host
-module.identity ---> oci_core_dhcp_options ---> oci_core_vcn
-module.identity ---> oci_core_drg ---> oci_core_drg_attachment ---> oci_core_drg_attachment_management
-oci_core_drg ---> oci_core_drg_attachments_list
-oci_core_drg ---> oci_core_drg_route_distribution ---> oci_core_drg_route_distribution_statement
-oci_core_drg ---> oci_core_drg_route_table
-oci_core_drg ---> oci_core_drg_route_table_route_rule
-oci_core_drg_attachment ---> oci_core_drg_route_table_route_rule
-module.identity ---> oci_core_image
-oci_core_instance ---> oci_core_console_history
-module.identity ---> oci_core_instance
-oci_core_instance ---> oci_core_instance_console_connection
-oci_core_instance ---> oci_core_compute_capacity_reservation
-oci_core_instance ---> oci_core_compute_cluster
-oci_core_instance ---> oci_core_dedicated_vm_host
-oci_core_instance ---> oci_core_subnet
-oci_core_instance ---> oci_core_vlan
-oci_core_instance ---> oci_core_boot_volume
-oci_core_instance ---> oci_core_image
-oci_core_instance ---> module.kms
-oci_core_instance_console_connection ---> oci_core_instance
+idmod1[[module.identity]]
+idmod2[[module.kms]]
+res0([oci_core_app_catalog_listing_resource_version_agreement])
+res1([oci_core_app_catalog_subscription])
+res2([oci_core_boot_volume])
+res3([oci_core_boot_volume_backup])
+res4([oci_core_capture_filter])
+res5([oci_core_cluster_network])
+res6([oci_core_compute_capacity_report])
+res7([oci_core_compute_capacity_reservation])
+res8([oci_core_compute_capacity_topology])
+res9([oci_core_compute_cluster])
+res10([oci_core_compute_image_capability_schema])
+res11([oci_core_console_history])
+res12([oci_core_cpe])
+res13([oci_core_cross_connect])
+res14([oci_core_image])
+res15([oci_core_instance])
+res16([oci_core_cross_connect_group])
+res17([oci_core_dedicated_vm_host])
+res18([oci_core_dhcp_options])
+res19([oci_core_drg])
+res20([oci_core_drg_attachment])
+res21([oci_core_drg_attachment_management])
+res22([oci_core_drg_attachments_list])
+res23([oci_core_drg_route_distribution])
+res24([oci_core_drg_route_distribution_statement])
+res25([oci_core_drg_route_table])
+res25-1{{oci_core_drg_route_table_route_rule}}
+res26([oci_core_vcn])
+res29([oci_core_instance_console_connection])
+opt1{{oci_core_subnet}}
+opt2{{oci_core_cpe}}
+opt3{{oci_core_cross_connect_group}}
+opt4{{oci_core_drg_route_table}}
+opt5{{oci_core_route_table}}
+opt6{{oci_core_drg_route_distribution}}
+opt7{{oci_core_remote_peering_connection}}
+opt8{{oci_core_vcn}}
+opt9{{oci_core_ipsec}}
+opt10{{oci_core_virtual_network}}
+opt11{{oci_core_drg_attachment}}
+opt12{{oci_core_drg_route_distribution}}
+opt13{{oci_core_instance}}
+opt14{{oci_core_compute_capacity_reservation}}
+opt15{{oci_core_compute_cluster}}
+opt16{{oci_core_dedicated_vm_host}}
+dopt1(oci_core_subnet)
+dopt2(oci_core_vlan)
+dopt3(oci_core_boot_volume)
+dopt4(oci_core_image)
+idmod1 --> res0
+idmod1 --> res1
+idmod1 --> res1
+idmod1 --> res2
+idmod2 --> res2
+res1 --> res3
+idmod2 --> res3
+idmod1 --> res4
+idmod1 --> res5 <--> opt1
+idmod1 --> res6
+idmod1 --> res7
+idmod1 --> res8
+idmod1 --> res9
+idmod1 --> res10 <--> res14
+res11 <--> res15
+idmod1 --> res12 <--> opt2
+idmod1 --> res13
+idmod1 --> res13 <--> opt3
+idmod1 --> res16
+idmod1 --> res17
+idmod1 --> res18
+res26 --> res18
+idmod1 --> res19
+res19 --> res20 <--> opt4
+res20 <--> opt5
+idmod1 --> res21
+res19 --> res21
+res21 <--> opt5
+res21 <--> opt6
+res21 <--> opt7
+res21 <--> opt8
+res21 <--> opt9
+res21 <--> opt10
+res19 --> res22
+res19 --> res23
+res23 --> res24
+res23 <--> opt11
+res19 --> res25
+res25 <--> opt12
+res19 --> res25-1
+res20 --> res25-1
+idmod1 --> res14
+res27 <--> opt13
+idmod1 --> res15
+res15 <--> opt14
+res15 <--> opt15
+res15 <--> opt16
+res15 <--> dopt1
+res15 <--> dopt2
+res15 <--> idmod1
+res15 <--> idmod2
+res15 <--> dopt3
+res15 <--> dopt4
+res15 --> res29
 ```
 
 ## Resources
