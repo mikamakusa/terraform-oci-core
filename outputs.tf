@@ -195,3 +195,279 @@ output "console_history_state" {
     oci_core_console_history.this.*.state
   )
 }
+
+## CPE
+
+output "cpe_id" {
+  value = try(
+    oci_core_cpe.this.*.id
+  )
+}
+
+output "cpe_device_shape_id" {
+  value = try(
+    oci_core_cpe.this.*.cpe_device_shape_id
+  )
+}
+
+output "cpe_display_name" {
+  value = try(
+    oci_core_cpe.this.*.display_name
+  )
+}
+
+output "cpe_is_private" {
+  value = try(
+    oci_core_cpe.this.*.is_private
+  )
+}
+
+## CROSS CONNECT
+
+output "cross_connect_id" {
+  value = try(
+    oci_core_cross_connect.this.*.id
+  )
+}
+
+output "cross_connect_state" {
+  value = try(
+    oci_core_cross_connect.this.*.state
+  )
+}
+
+## CROSS CONNECT GROUP
+
+output "cross_connect_group_id" {
+  value = try(
+    oci_core_cross_connect_group.this.*.id
+  )
+}
+
+## DEDICATED VM HOST
+
+output "dedicated_vm_host_id" {
+  value = try(
+    oci_core_dedicated_vm_host.this.*.id
+  )
+}
+
+output "dedicated_vm_host_state" {
+  value = try(
+    oci_core_dedicated_vm_host.this.*.state
+  )
+}
+
+## DRG
+
+output "drg_id" {
+  value = try(
+    oci_core_drg.this.*.id
+  )
+}
+
+output "drg_default_drg_route_tables" {
+  value = try(
+    oci_core_drg.this.*.default_drg_route_tables
+  )
+}
+
+output "drg_default_export_drg_route_distribution_id" {
+  value = try(
+    oci_core_drg.this.*.default_export_drg_route_distribution_id
+  )
+}
+
+output "drg_redundancy_status" {
+  value = try(
+    oci_core_drg.this.*.redundancy_status
+  )
+}
+
+## DRG ATTACHMENT
+
+output "drg_attachment_id" {
+  value = try(
+    oci_core_drg_attachment.this.*.id
+  )
+}
+
+output "drg_attachment_state" {
+  value = try(
+    oci_core_drg_attachment.this.*.state
+  )
+}
+
+output "drg_attachment_route_table_id" {
+  value = try(
+    oci_core_drg_attachment.this.*.route_table_id
+  )
+}
+
+output "drg_attachment_is_cross_tenancy" {
+  value = try(
+    oci_core_drg_attachment.this.*.is_cross_tenancy
+  )
+}
+
+output "drg_attachment_export_drg_route_distribution_id" {
+  value = try(
+    oci_core_drg_attachment.this.*.export_drg_route_distribution_id
+  )
+}
+
+## DRG ATTACHMENT MANAGEMENT
+
+output "drg_attachment_management_id" {
+  value = try(
+    oci_core_drg_attachment_management.this.*.id
+  )
+}
+
+output "drg_attachment_management_is_cross_tenancy" {
+  value = try(
+    oci_core_drg_attachment_management.this.*.is_cross_tenancy
+  )
+}
+
+output "drg_attachment_management_export_drg_route_distribution_id" {
+  value = try(
+    oci_core_drg_attachment_management.this.*.export_drg_route_distribution_id
+  )
+}
+
+output "drg_attachment_management_route_table_id" {
+  value = try(
+    oci_core_drg_attachment_management.this.*.route_table_id
+  )
+}
+
+## DRG ATTACHMENT LIST
+
+output "drg_attachment_list_id" {
+  value = try(
+    oci_core_drg_attachments_list.this.*.id
+  )
+}
+
+output "drg_all_attachments" {
+  value = try(
+    oci_core_drg_attachments_list.this.*.drg_all_attachments
+  )
+}
+
+## DRG ROUTE DISTRIBUTION
+
+output "drg_route_distribution_id" {
+  value = try(
+    oci_core_drg_route_distribution.this.*.id
+  )
+}
+
+## DRG ROUTE DISTRIBUTION STATEMENT
+
+output "drg_route_distribution_statement_id" {
+  value = try(
+    oci_core_drg_route_distribution_statement.this.*.id
+  )
+}
+
+output "drg_route_distribution_statement_route_distribution_id" {
+  value = try(
+    oci_core_drg_route_distribution_statement.this.*.drg_route_distribution_id
+  )
+}
+
+output "drg_route_distribution_statement_priority" {
+  value = try(
+    oci_core_drg_route_distribution_statement.this.*.priority
+  )
+}
+
+## DRG ROUTE TABLE
+
+output "drg_route_table_id" {
+  value = try(
+    oci_core_drg_route_table.this.*.id
+  )
+}
+
+output "drg_route_table_state" {
+  value = try(
+    oci_core_drg_route_table.this.*.state
+  )
+}
+
+output "drg_route_table_import_drg_route_distribution_id" {
+  value = try(
+    oci_core_drg_route_table.this.*.import_drg_route_distribution_id
+  )
+}
+
+## DRG ROUTE TABLE ROUTE RULE
+
+output "drg_route_table_route_rule_id" {
+  value = try(
+    oci_core_drg_route_table_route_rule.this.*.id
+  )
+}
+
+output "drg_route_table_route_rule_destination" {
+  value = try(
+    oci_core_drg_route_table_route_rule.this.*.destination
+  )
+}
+
+output "drg_route_table_route_rule_destination_type" {
+  value = try(
+    oci_core_drg_route_table_route_rule.this.*.destination_type
+  )
+}
+
+## IMAGE
+
+output "image_id" {
+  value = try(
+    oci_core_image.this.*.id
+  )
+}
+
+output "image_launch_mode" {
+  value = try(
+    oci_core_image.this.*.launch_mode
+  )
+}
+
+output "image_instance_id" {
+  value = try(
+    oci_core_image.this.*.instance_id
+  )
+}
+
+## INSTANCE
+
+output "instance_id" {
+  value = try(
+    oci_core_instance.this.*.id
+  )
+}
+
+output "instance_configuration_id" {
+  value = try(
+    oci_core_instance.this.*.instance_configuration_id
+  )
+}
+
+## INSTANCE CONSOLE CONNECTION
+
+output "instance_console_connection_id" {
+  value = try(
+    oci_core_instance_console_connection.this.*.id
+  )
+}
+
+output "instance_console_connection_state" {
+  value = try(
+    oci_core_instance_console_connection.this.*.state
+  )
+}

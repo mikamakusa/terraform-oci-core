@@ -327,112 +327,453 @@ variable "console_history" {
 
 variable "cpe" {
   type = list(object({
-    id = number
+    id                  = number
+    compartment_id      = any
+    ip_address          = string
+    cpe_device_shape_id = optional(any)
+    defined_tags        = optional(map(string))
+    display_name        = optional(string)
+    freeform_tags       = optional(map(string))
+    is_private          = optional(bool)
   }))
   default = []
 }
 
 variable "cross_connect" {
   type = list(object({
-    id = number
+    id                                           = number
+    compartment_id                               = any
+    location_name                                = string
+    port_speed_shape_name                        = string
+    cross_connect_group_id                       = optional(any)
+    customer_reference_name                      = optional(string)
+    defined_tags                                 = optional(map(string))
+    display_name                                 = optional(string)
+    far_cross_connect_or_cross_connect_group_id  = optional(any)
+    freeform_tags                                = optional(map(string))
+    near_cross_connect_or_cross_connect_group_id = optional(any)
+    macsec_properties = optional(list(object({
+      state                          = string
+      encryption_cipher              = optional(string)
+      is_unprotected_traffic_allowed = optional(bool)
+      primary_key = optional(list(object({
+        connectivity_association_key_secret_id  = optional(any)
+        connectivity_association_name_secret_id = optional(any)
+      })))
+    })))
   }))
   default = []
 }
 
 variable "cross_connect_group" {
   type = list(object({
-    id = number
+    id                      = number
+    compartment_id          = any
+    customer_reference_name = optional(string)
+    defined_tags            = optional(map(string))
+    display_name            = optional(string)
+    freeform_tags           = optional(map(string))
+    macsec_properties = optional(list(object({
+      state                          = string
+      encryption_cipher              = optional(string)
+      is_unprotected_traffic_allowed = optional(bool)
+      primary_key = optional(list(object({
+        connectivity_association_key_secret_id  = optional(any)
+        connectivity_association_name_secret_id = optional(any)
+      })))
+    })))
   }))
   default = []
 }
 
 variable "dedicated_vm_host" {
   type = list(object({
-    id = number
+    id                      = number
+    availability_domain     = string
+    compartment_id          = any
+    dedicated_vm_host_shape = string
+    defined_tags            = optional(map(string))
+    display_name            = optional(string)
+    fault_domain            = optional(string)
+    freeform_tags           = optional(map(string))
   }))
   default = []
 }
 
 variable "dhcp_options" {
   type = list(object({
-    id = number
+    id               = number
+    compartment_id   = any
+    vcn_id           = any
+    defined_tags     = optional(map(string))
+    display_name     = optional(string)
+    domain_name_type = optional(string)
+    freeform_tags    = optional(map(string))
+    options = list(object({
+      type                = string
+      custom_dns_servers  = optional(list(string))
+      search_domain_names = optional(list(string))
+      server_type         = optional(string)
+    }))
   }))
   default = []
 }
 
 variable "drg" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
   }))
   default = []
 }
 
 variable "drg_attachment" {
   type = list(object({
-    id = number
+    id                 = number
+    drg_id             = any
+    defined_tags       = optional(map(string))
+    display_name       = optional(string)
+    drg_route_table_id = optional(any)
+    freeform_tags      = optional(map(string))
+    network_details = optional(list(object({
+      type           = string
+      id             = optional(any)
+      route_table_id = optional(any)
+      vcn_route_type = optional(string)
+    })))
   }))
   default = []
 }
 
 variable "drg_attachment_management" {
   type = list(object({
-    id = number
+    id                                           = number
+    attachment_type                              = string
+    compartment_id                               = any
+    drg_id                                       = any
+    defined_tags                                 = optional(map(string))
+    display_name                                 = optional(string)
+    drg_route_table_id                           = optional(any)
+    export_drg_route_distribution_id             = optional(any)
+    freeform_tags                                = optional(map(string))
+    network_id                                   = optional(any)
+    remove_export_drg_route_distribution_trigger = optional(bool)
+    route_table_id                               = optional(any)
+    vcn_id                                       = optional(any)
+    network_details = optional(list(object({
+      type                = string
+      id                  = any
+      route_table_id      = optional(any)
+      ipsec_connection_id = optional(any)
+    })))
   }))
   default = []
+
+  validation {
+    condition = length([
+      for a in var.drg_attachment_management : true if contains(["IPSEC_TUNNEL", "REMOTE_PEERING_CONNECTION", "VCN", "VIRTUAL_CIRCUIT"], a.network_details.type)
+    ]) == length(var.drg_attachment_management)
+    error_message = "The type can be one of these values: IPSEC_TUNNEL, REMOTE_PEERING_CONNECTION, VCN,VIRTUAL_CIRCUIT."
+  }
 }
 
 variable "drg_attachments_list" {
   type = list(object({
-    id = number
+    id               = number
+    drg_id           = any
+    attachment_type  = optional(string)
+    is_cross_tenancy = optional(bool)
   }))
   default = []
 }
 
 variable "drg_route_distribution" {
   type = list(object({
-    id = number
+    id                = number
+    distribution_type = string
+    drg_id            = any
+    defined_tags      = optional(map(string))
+    display_name      = optional(string)
+    freeform_tags     = optional(map(string))
   }))
   default = []
 }
 
 variable "drg_route_distribution_statement" {
   type = list(object({
-    id = number
+    id                        = number
+    action                    = string
+    drg_route_distribution_id = any
+    priority                  = number
+    match_criteria = list(object({
+      match_type        = string
+      attachment_type   = optional(string)
+      drg_attachment_id = optional(any)
+    }))
   }))
   default = []
+
+  validation {
+    condition = length([
+      for a in var.drg_route_distribution_statement : true if contains(["MATCH_ALL", "DRG_ATTACHMENT_TYPE", "DRG_ATTACHMENT_ID"], a.match_criteria.match_type)
+    ]) == length(var.drg_route_distribution_statement)
+    error_message = "Possible values are : MATCH_ALL, DRG_ATTACHMENT_TYPE, DRG_ATTACHMENT_ID."
+  }
 }
 
 variable "drg_route_table" {
   type = list(object({
-    id = number
+    id                               = number
+    drg_id                           = any
+    defined_tags                     = optional(map(string))
+    display_name                     = optional(string)
+    freeform_tags                    = optional(map(string))
+    import_drg_route_distribution_id = optional(any)
+    is_ecmp_enabled                  = optional(bool)
+    remove_import_trigger            = optional(bool)
   }))
   default = []
 }
 
 variable "drg_route_table_route_rule" {
   type = list(object({
-    id = number
+    id                         = number
+    destination                = string
+    destination_type           = string
+    drg_route_table_id         = any
+    next_hop_drg_attachment_id = any
   }))
   default = []
 }
 
 variable "image" {
   type = list(object({
-    id = number
+    id            = number
+    defined_tags  = optional(map(string))
+    display_name  = optional(string)
+    freeform_tags = optional(map(string))
+    instance_id   = optional(any)
+    launch_mode   = optional(string)
+    image_source_details = optional(list(object({
+      source_type              = string
+      namespace_name           = optional(string)
+      object_name              = optional(string)
+      operating_system         = optional(string)
+      operating_system_version = optional(string)
+      source_image_type        = optional(string)
+      source_uri               = optional(string)
+    })))
   }))
   default = []
+
+  validation {
+    condition = length([
+      for a in var.image : true if contains(["NATIVE", "EMULATED", "PARAVIRTUALIZED", "CUSTOM"], a.launch_mode)
+    ]) == length(var.image)
+    error_message = "Possible values : NATIVE, EMULATED, PARAVIRTUALIZED, CUSTOM."
+  }
+
+  validation {
+    condition = length([
+      for b in var.image : true if contains(["VMDK", "QCOW2"], b.image_source_details.image_source_type)
+    ]) == length(var.image)
+    error_message = "Possible values : VMDK, QCOW2."
+  }
 }
 
 variable "instance" {
   type = list(object({
-    id = number
+    id                                      = number
+    availability_domain                     = string
+    compartment_id                          = any
+    shape                                   = string
+    async                                   = optional(bool)
+    capacity_reservation_id                 = optional(any)
+    cluster_placement_group_id              = optional(any)
+    compute_cluster_id                      = optional(any)
+    dedicated_vm_host_id                    = optional(any)
+    defined_tags                            = optional(map(string))
+    display_name                            = optional(string)
+    extended_metadata                       = optional(map(string))
+    fault_domain                            = optional(string)
+    freeform_tags                           = optional(map(string))
+    instance_configuration_id               = optional(any)
+    ipxe_script                             = optional(string)
+    is_pv_encryption_in_transit_enabled     = optional(bool)
+    metadata                                = optional(map(string))
+    preserve_boot_volume                    = optional(bool)
+    preserve_data_volumes_created_at_launch = optional(bool)
+    state                                   = optional(string)
+    update_operation_constraint             = optional(string)
+    agent_config = optional(list(object({
+      are_all_plugins_disabled = optional(bool)
+      is_management_disabled   = optional(bool)
+      is_monitoring_disabled   = optional(bool)
+      plugins_config = optional(list(object({
+        desired_state = string
+        name          = string
+      })))
+    })))
+    availability_config = optional(list(object({
+      is_live_migration_preferred = optional(bool)
+      recovery_action             = optional(string)
+    })))
+    create_vnic_details = optional(list(object({
+      assign_ipv6ip             = optional(bool)
+      assign_private_dns_record = optional(bool)
+      assign_public_ip          = optional(string)
+      defined_tags              = optional(map(string))
+      display_name              = optional(string)
+      freeform_tags             = optional(map(string))
+      hostname_label            = optional(string)
+      nsg_ids                   = optional(list(string))
+      private_ip                = optional(string)
+      skip_source_dest_check    = optional(bool)
+      subnet_id                 = optional(any)
+      vlan_id                   = optional(any)
+    })))
+    instance_options = optional(list(object({
+      are_legacy_imds_endpoints_disabled = optional(bool)
+    })))
+    launch_options = optional(list(object({
+      boot_volume_type                    = optional(string)
+      firmware                            = optional(string)
+      is_consistent_volume_naming_enabled = optional(bool)
+      is_pv_encryption_in_transit_enabled = optional(bool)
+      network_type                        = optional(string)
+      remote_data_volume_type             = optional(string)
+    })))
+    launch_volume_attachments = optional(list(object({
+      type                              = string
+      device                            = optional(string)
+      display_name                      = optional(string)
+      encryption_in_transit_type        = optional(string)
+      is_agent_auto_iscsi_login_enabled = optional(bool)
+      is_read_only                      = optional(bool)
+      is_shareable                      = optional(bool)
+      use_chap                          = optional(bool)
+      volume_id                         = optional(string)
+      launch_create_volume_details = optional(list(object({
+        size_in_gbs          = optional(string)
+        volume_creation_type = optional(string)
+        compartment_id       = optional(any)
+        display_name         = optional(string)
+        kms_key_id           = optional(any)
+        vpus_per_gb          = optional(string)
+      })))
+    })))
+    platform_config = optional(list(object({
+      type                                           = string
+      are_virtual_instructions_enabled               = optional(bool)
+      config_map                                     = optional(map(string))
+      is_access_control_service_enabled              = optional(bool)
+      is_input_output_memory_management_unit_enabled = optional(bool)
+      is_measured_boot_enabled                       = optional(bool)
+      is_memory_encryption_enabled                   = optional(bool)
+      is_secure_boot_enabled                         = optional(bool)
+      is_symmetric_multi_threading_enabled           = optional(bool)
+      is_trusted_platform_module_enabled             = optional(bool)
+      numa_nodes_per_socket                          = optional(string)
+      percentage_of_cores_enabled                    = optional(number)
+    })))
+    preemptible_instance_config = optional(list(object({
+      preemption_action = list(object({
+        type                 = string
+        preserve_boot_volume = optional(bool)
+      }))
+    })))
+    shape_config = optional(list(object({
+      baseline_ocpu_utilization = optional(string)
+      memory_in_gbs             = optional(number)
+      nvmes                     = optional(number)
+      ocpus                     = optional(number)
+      vcpus                     = optional(number)
+    })))
+    source_details = optional(list(object({
+      source_type                     = string
+      source_type                     = optional(string)
+      source_id                       = optional(string)
+      boot_volume_size_in_gbs         = optional(string)
+      boot_volume_vpus_per_gb         = optional(string)
+      kms_key_id                      = optional(string)
+      is_preserve_boot_volume_enabled = optional(bool)
+      instance_source_image_filter_details = optional(list(object({
+        compartment_id           = any
+        defined_tags_filter      = optional(map(string))
+        operating_system         = optional(string)
+        operating_system_version = optional(string)
+      })))
+    })))
   }))
   default = []
+
+  validation {
+    condition = length([
+      for a in var.instance : true if contains(["RESTORE_INSTANCE", "STOP_INSTANCE"], a.availability_config.recovery_action)
+    ]) == length(var.instance)
+    error_message = "Possible values are RESTORE_INSTANCE and STOP_INSTANCE."
+  }
+
+  validation {
+    condition = length([
+      for b in var.instance : true if contains(["ISCSI", "SCSI", "IDE", "VFIO", "PARAVIRTUALIZED"], b.launch_options.boot_volume_type)
+    ]) == length(var.instance)
+    error_message = "Possible values are ISCSI, SCSI, IDE, VFIO and PARAVIRTUALIZED."
+  }
+
+  validation {
+    condition = length([
+      for c in var.instance : true if contains(["BIOS", "UEFI_64"], c.launch_options.firmware)
+    ]) == length(var.instance)
+    error_message = "Possible values are BIOS, UEFI_64."
+  }
+
+  validation {
+    condition = length([
+      for d in var.instance : true if contains(["E1000", "VFIO", "PARAVIRTUALIZED"], d.launch_options.network_type)
+    ]) == length(var.instance)
+    error_message = "Possible values are E1000, VFIO and PARAVIRTUALIZED."
+  }
+
+  validation {
+    condition = length([
+      for e in var.instance : true if contains(["ISCSI", "SCSI", "IDE", "VFIO", "PARAVIRTUALIZED"], e.launch_options.remote_data_volume_type)
+    ]) == length(var.instance)
+    error_message = "Possible values are ISCSI, SCSI, IDE, VFIO and PARAVIRTUALIZED."
+  }
+
+  validation {
+    condition = length([
+      for f in var.instance : true if contains(["0", "10", "20", "30"], f.launch_volume_attachments.lauch_create_volume_details.vpus_per_gb)
+    ]) == length(var.instance)
+    error_message = "Possible values are 0, 10, 20, 30."
+  }
+
+  validation {
+    condition = length([
+      for g in var.instance : true if contains(["BASELINE_1_8", "BASELINE_1_2", "BASELINE_1_1"], g.shape_config.baseline_ocpu_utilization)
+    ]) == length(var.instance)
+    error_message = "Possible values are BASELINE_1_8, BASELINE_1_2, BASELINE_1_1."
+  }
+
+  validation {
+    condition = length([
+      for g in var.instance : true if contains(["10", "20", "30"], g.source_details.boot_volume_vpus_per_gb)
+    ]) == length(var.instance)
+    error_message = "Possible values are 10, 20, 30."
+  }
 }
 
 variable "instance_console_connection" {
   type = list(object({
-    id = number
+    id            = number
+    instance_id   = any
+    public_key    = string
+    defined_tags  = optional(map(string))
+    freeform_tags = optional(map(string))
   }))
   default = []
 }

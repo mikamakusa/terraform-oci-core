@@ -1,0 +1,1 @@
+data "oci_core_cpe_device_shapes" "this" {}
