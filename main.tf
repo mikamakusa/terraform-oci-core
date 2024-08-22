@@ -1610,46 +1610,156 @@ resource "oci_core_nat_gateway" "this" {
 }
 
 resource "oci_core_network_security_group" "this" {
-  compartment_id = ""
-  vcn_id         = ""
+  count          = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.network_security_group)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.network_security_group[count.index], "compartment_id")))
+  vcn_id         = try(element(oci_core_vcn.this.*.id, lookup(var.network_security_group[count.index], "vcn_id")))
+  defined_tags   = merge(var.defined_tags, lookup(var.network_security_group[count.index], "defined_tags"))
+  display_name   = lookup(var.network_security_group[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.network_security_group[count.index], "freeform_tags"))
 }
 
 resource "oci_core_network_security_group_security_rule" "this" {
-  direction                 = ""
-  network_security_group_id = ""
-  protocol                  = ""
+  count                     = length(var.network_security_group) == 0 ? 0 : length(var.network_security_group_security_rule)
+  direction                 = lookup(var.network_security_group_security_rule[count.index], "direction")
+  network_security_group_id = try(element(oci_core_network_security_group.this.*.id, lookup(var.network_security_group_security_rule[count.index], "network_security_group_id")))
+  protocol                  = lookup(var.network_security_group_security_rule[count.index], "protocol")
+  description               = lookup(var.network_security_group_security_rule[count.index], "description")
+  destination               = lookup(var.network_security_group_security_rule[count.index], "destination")
+  destination_type          = lookup(var.network_security_group_security_rule[count.index], "destination_type")
+  source                    = lookup(var.network_security_group_security_rule[count.index], "source")
+  source_type               = lookup(var.network_security_group_security_rule[count.index], "source_type")
+  stateless                 = lookup(var.network_security_group_security_rule[count.index], "stateless")
+
+  dynamic "icmp_options" {
+    for_each = try(lookup(var.network_security_group_security_rule[count.index], "icmp_options") == null ? [] : ["icmp_options"])
+    iterator = icmp
+    content {
+      type = lookup(icmp.value, "type")
+      code = lookup(icmp.value, "code")
+    }
+  }
+
+  dynamic "tcp_options" {
+    for_each = try(lookup(var.network_security_group_security_rule[count.index], "tcp_options") == null ? [] : ["tcp_options"])
+    iterator = tcp
+    content {
+      dynamic "destination_port_range" {
+        for_each = try(lookup(tcp.value, "destination_port_range") == null ? [] : ["destination_port_range"])
+        iterator = destination
+        content {
+          max = lookup(destination.value, "max")
+          min = lookup(destination.value, "min")
+        }
+      }
+
+      dynamic "source_port_range" {
+        for_each = try(lookup(tcp.value, "source_port_range") == null ? [] : ["source_port_range"])
+        iterator = source
+        content {
+          max = lookup(source.value, "max")
+          min = lookup(source.value, "min")
+        }
+      }
+    }
+  }
+
+  dynamic "udp_options" {
+    for_each = try(lookup(var.network_security_group_security_rule[count.index], "udp_options") == null ? [] : ["udp_options"])
+    iterator = udp
+    content {
+      dynamic "destination_port_range" {
+        for_each = try(lookup(udp.value, "destination_port_range") == null ? [] : ["destination_port_range"])
+        iterator = destination
+        content {
+          max = lookup(destination.value, "max")
+          min = lookup(destination.value, "min")
+        }
+      }
+
+      dynamic "source_port_range" {
+        for_each = try(lookup(udp.value, "source_port_range") == null ? [] : ["source_port_range"])
+        iterator = source
+        content {
+          max = lookup(source.value, "max")
+          min = lookup(source.value, "min")
+        }
+      }
+    }
+  }
 }
 
-resource "oci_core_private_ip" "this" {}
+resource "oci_core_private_ip" "this" {
+  count          = length(var.private_ip)
+  defined_tags   = merge(var.defined_tags, lookup(var.private_ip[count.index], "defined_tags"))
+  display_name   = lookup(var.private_ip[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.private_ip[count.index], "freeform_tags"))
+  hostname_label = lookup(var.private_ip[count.index], "hostname_label")
+  ip_address     = lookup(var.private_ip[count.index], "ip_address")
+  vlan_id        = try(element(oci_core_vlan.this.*.id, lookup(var.private_ip[count.index], "vlan_id")))
+  vnic_id        = try(element(oci_core_vnic_attachment.this.*.id, lookup(var.private_ip[count.index], "vnic_id")))
+}
 
 resource "oci_core_public_ip" "this" {
-  compartment_id = ""
-  lifetime       = ""
+  count             = length(var.compartment) == 0 ? 0 : length(var.public_ip)
+  compartment_id    = try(element(module.identity.*.compartment_id, lookup(var.public_ip[count.index], "compartment_id")))
+  lifetime          = lookup(var.public_ip[count.index], "lifetime")
+  public_ip_pool_id = try(element(oci_core_public_ip_pool.this.*.id, lookup(var.public_ip[count.index], "public_ip_pool_id")))
+  private_ip_id     = try(element(oci_core_private_ip.this.*.id, lookup(var.public_ip[count.index], "private_ip_id")))
+  defined_tags      = merge(var.defined_tags, lookup(var.public_ip[count.index], "defined_tags"))
+  display_name      = lookup(var.public_ip[count.index], "display_name")
+  freeform_tags     = merge(var.freeform_tags, lookup(var.public_ip[count.index], "freeform_tags"))
 }
 
 resource "oci_core_public_ip_pool" "this" {
-  compartment_id = ""
+  count          = length(var.compartment) == 0 ? 0 : length(var.public_ip_pool)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.public_ip_pool[count.index], "compartment_id")))
+  defined_tags   = merge(var.defined_tags, lookup(var.public_ip_pool[count.index], "defined_tags"))
+  display_name   = lookup(var.public_ip_pool[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.public_ip_pool[count.index], "freeform_tags"))
 }
 
-resource "oci_core_public_ip_pool_capacity" "this" {
+/*resource "oci_core_public_ip_pool_capacity" "this" {
   byoip_id          = ""
   cidr_block        = ""
   public_ip_pool_id = ""
-}
+}*/
 
 resource "oci_core_remote_peering_connection" "this" {
-  compartment_id = ""
-  drg_id         = ""
+  count            = (length(var.compartment) && length(var.drg)) == 0 ? 0 : length(var.remote_peering_connection)
+  compartment_id   = try(element(module.identity.*.compartment_id, lookup(var.remote_peering_connection[count.index], "compartment_id")))
+  drg_id           = try(element(oci_core_drg.this.*.id, lookup(var.remote_peering_connection[count.index], "drg_id")))
+  defined_tags     = merge(var.defined_tags, lookup(var.public_ip_pool[count.index], "defined_tags"))
+  display_name     = lookup(var.public_ip_pool[count.index], "display_name")
+  freeform_tags    = merge(var.freeform_tags, lookup(var.public_ip_pool[count.index], "freeform_tags"))
+  peer_id          = try(element(oci_core_remote_peering_connection.this.*.id, lookup(var.remote_peering_connection[count.index], "peer_id")))
+  peer_region_name = lookup(var.remote_peering_connection[count.index], "peer_region_name")
 }
 
 resource "oci_core_route_table" "this" {
-  compartment_id = ""
-  vcn_id         = ""
+  count          = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.route_table)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.route_table[count.index], "compartment_id")))
+  vcn_id         = try(element(oci_core_vcn.this.*.id, lookup(var.route_table[count.index], "vcn_id")))
+  defined_tags   = merge(var.defined_tags, lookup(var.public_ip_pool[count.index], "defined_tags"))
+  display_name   = lookup(var.public_ip_pool[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.public_ip_pool[count.index], "freeform_tags"))
+
+  dynamic "route_rules" {
+    for_each = length(var.internet_gateway) == 0 ? 0 : try(lookup(var.route_table[count.index], "route_rules") == null ? [] : ["route_rules"])
+    iterator = rules
+    content {
+      network_entity_id = try(element(oci_core_internet_gateway.this.*.id, lookup(rules.value, "network_entity_id")))
+      description       = lookup(rules.value, "description")
+      destination       = lookup(rules.value, "destination")
+      destination_type  = lookup(rules.value, "destination_type")
+      route_type        = lookup(rules.value, "route_type")
+    }
+  }
 }
 
 resource "oci_core_route_table_attachment" "this" {
-  route_table_id = ""
-  subnet_id      = ""
+  count          = (length(var.route_table) && length(var.subnet)) == 0 ? 0 : length(var.route_table_attachment)
+  route_table_id = try(element(oci_core_route_table.this.*.id, lookup(var.route_table_attachment[count.index], "route_table_id")))
+  subnet_id      = try(element(oci_core_subnet.this.*.id, lookup(var.route_table_attachment[count.index], "subnet_id")))
 }
 
 resource "oci_core_security_list" "this" {
@@ -1658,39 +1768,73 @@ resource "oci_core_security_list" "this" {
 }
 
 resource "oci_core_service_gateway" "this" {
-  compartment_id = ""
-  vcn_id         = ""
+  count          = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.service_gateway)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.service_gateway[count.index], "compartment_id")))
+  vcn_id         = try(element(oci_core_vcn.this.*.id, lookup(var.service_gateway[count.index], "vcn_id")))
+  defined_tags   = merge(var.defined_tags, lookup(var.service_gateway[count.index], "defined_tags"))
+  display_name   = lookup(var.service_gateway[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.service_gateway[count.index], "freeform_tags"))
+  route_table_id = try(element(oci_core_route_table.this.*.id, lookup(var.service_gateway[count.index], "route_table_id")))
 
   dynamic "services" {
-    for_each = ""
+    for_each = lookup(var.service_gateway[count.index], "services")
     content {
-      service_id = ""
+      service_id = data.oci_core_services.this.*.services.0.id
     }
   }
 }
 
 resource "oci_core_shape_management" "this" {
-  compartment_id = ""
-  image_id       = ""
-  shape_name     = ""
+  count          = (length(var.compartment) && length(var.image)) == 0 ? 0 : length(var.shape_management)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.shape_management[count.index], "compartment_id")))
+  image_id       = try(element(oci_core_image.this.*.id, lookup(var.service_gateway[count.index], "image_id")))
+  shape_name     = lookup(var.shape_management[count.index], "shape_name")
 }
 
 resource "oci_core_subnet" "this" {
-  cidr_block     = ""
-  compartment_id = ""
-  vcn_id         = ""
+  count                      = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.subnet)
+  cidr_block                 = lookup(var.subnet[count.index], "cidr_block")
+  compartment_id             = try(element(module.identity.*.compartment_id, lookup(var.subnet[count.index], "compartment_id")))
+  vcn_id                     = try(element(oci_core_vcn.this.*.id, lookup(var.subnet[count.index], "vcn_id")))
+  availability_domain        = lookup(var.subnet[count.index], "availability_domain")
+  defined_tags               = merge(var.defined_tags, lookup(var.subnet[count.index], "defined_tags"))
+  dhcp_options_id            = try(element(oci_core_dhcp_options.this.*.id, lookup(var.subnet[count.index], "dhcp_option_id")))
+  display_name               = lookup(var.subnet[count.index], "display_name")
+  dns_label                  = lookup(var.subnet[count.index], "dns_label")
+  freeform_tags              = merge(var.freeform_tags, lookup(var.subnet[count.index], "freeform_tags"))
+  ipv6cidr_block             = lookup(var.subnet[count.index], "ipv6cidr_block")
+  ipv6cidr_blocks            = lookup(var.subnet[count.index], "ipv6cidr_blocks")
+  prohibit_internet_ingress  = lookup(var.subnet[count.index], "prohibit_internet_ingress")
+  prohibit_public_ip_on_vnic = lookup(var.subnet[count.index], "prohibit_public_ip_on_vnic")
+  route_table_id             = try(element(oci_core_route_table.this.*.id, lookup(var.subnet[count.index], "route_table_id")))
+  security_list_ids          = try(element(oci_core_security_list.this.*.id, lookup(var.subnet[count.index], "security_list_ids")))
 }
 
 resource "oci_core_vcn" "this" {
-  compartment_id = ""
+  count                            = length(var.compartment) == 0 ? 0 : length(var.vcn)
+  compartment_id                   = try(element(module.identity.*.compartment_id, lookup(var.vcn[count.index], "compartment_id")))
+  cidr_block                       = lookup(var.vcn[count.index], "cidr_block")
+  cidr_blocks                      = lookup(var.vcn[count.index], "cidr_blocks")
+  defined_tags                     = merge(var.defined_tags, lookup(var.vcn[count.index], "defined_tags"))
+  display_name                     = lookup(var.vcn[count.index], "display_name")
+  dns_label                        = lookup(var.vcn[count.index], "dns_label")
+  freeform_tags                    = merge(var.freeform_tags, lookup(var.vcn[count.index], "freeform_tags"))
+  ipv6private_cidr_blocks          = lookup(var.vcn[count.index], "ipv6private_cidr_blocks")
+  is_ipv6enabled                   = lookup(var.vcn[count.index], "is_ipv6enabled")
+  is_oracle_gua_allocation_enabled = lookup(var.vcn[count.index], "is_oracle_gua_allocation_enabled")
+
+  dynamic "byoipv6cidr_details" {
+    for_each = try(lookup(var.vcn[count.index], "byoipv6cidr_details") == null ? [] : ["byoipv6cidr_details"])
+    iterator = details
+    content {
+      byoipv6range_id = lookup(details.value, "byoipv6range_id")
+      ipv6cidr_block  = lookup(details.value, "ipv6cidr_block")
+    }
+  }
 }
 
-resource "oci_core_virtual_circuit" "this" {
-  compartment_id = ""
+resource "oci_core_virtual_circuit" "name" {
   type           = ""
-}
-
-resource "oci_core_virtual_network" "this" {
   compartment_id = ""
 }
 

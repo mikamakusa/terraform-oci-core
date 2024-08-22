@@ -1322,63 +1322,143 @@ variable "nat_gateway" {
 
 variable "network_security_group" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    vcn_id         = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
   }))
   default = []
 }
 
 variable "network_security_group_security_rule" {
   type = list(object({
-    id = number
+    id                        = number
+    direction                 = string
+    network_security_group_id = any
+    protocol                  = string
+    description               = optional(string)
+    destination               = optional(string)
+    destination_type          = optional(string)
+    source                    = optional(string)
+    source_type               = optional(string)
+    stateless                 = optional(bool)
+    icmp_options = optional(list(object({
+      type = number
+      code = optional(number)
+    })))
+    tcp_options = optional(list(object({
+      destination_port_range = optional(list(object({
+        max = number
+        min = number
+      })))
+      source_port_range = optional(list(object({
+        max = number
+        min = number
+      })))
+    })))
+    udp_options = optional(list(object({
+      destination_port_range = optional(list(object({
+        max = number
+        min = number
+      })))
+      source_port_range = optional(list(object({
+        max = number
+        min = number
+      })))
+    })))
   }))
   default = []
 }
 
 variable "private_ip" {
   type = list(object({
-    id = number
+    id             = number
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
+    hostname_label = optional(string)
+    ip_address     = optional(string)
+    vlan_id        = optional(any)
+    vnic_id        = optional(any)
   }))
   default = []
 }
 
 variable "public_ip" {
   type = list(object({
-    id = number
+    id                = number
+    compartment_id    = any
+    lifetime          = string
+    defined_tags      = optional(map(string))
+    display_name      = optional(string)
+    freeform_tags     = optional(map(string))
+    public_ip_pool_id = any
+    private_ip_id     = any
   }))
   default = []
 }
 
 variable "public_ip_pool" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
   }))
   default = []
 }
 
 variable "public_ip_pool_capacity" {
   type = list(object({
-    id = number
+    id                = number
+    byoip_id          = any
+    cidr_block        = string
+    public_ip_pool_id = any
   }))
   default = []
 }
 
 variable "remote_peering_connection" {
   type = list(object({
-    id = number
+    id               = number
+    compartment_id   = any
+    drg_id           = any
+    defined_tags     = optional(map(string))
+    display_name     = optional(string)
+    freeform_tags    = optional(map(string))
+    peer_id          = optional(any)
+    peer_region_name = optional(string)
   }))
   default = []
 }
 
 variable "route_table" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    vcn_id         = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
+    route_rules = optional(list(object({
+      network_entity_id = any
+      description       = optional(string)
+      destination       = optional(string)
+      destination_type  = optional(string)
+      route_type        = optional(string)
+    })))
   }))
   default = []
 }
 
 variable "route_table_attachment" {
   type = list(object({
-    id = number
+    id             = number
+    route_table_id = any
+    subnet_id      = any
   }))
   default = []
 }
@@ -1392,28 +1472,69 @@ variable "security_list" {
 
 variable "service_gateway" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    vcn_id         = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
+    route_table_id = optional(any)
+    services = list(object({
+      service_id = optional(any)
+    }))
   }))
   default = []
 }
 
 variable "shape_management" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    image_id       = any
+    shape_name     = string
   }))
   default = []
 }
 
 variable "subnet" {
   type = list(object({
-    id = number
+    id                         = number
+    cidr_block                 = string
+    compartment_id             = any
+    vcn_id                     = any
+    availability_domain        = optional(string)
+    defined_tags               = optional(map(string))
+    dhcp_options_id            = optional(any)
+    display_name               = optional(string)
+    dns_label                  = optional(string)
+    freeform_tags              = optional(map(string))
+    ipv6cidr_block             = optional(string)
+    ipv6cidr_blocks            = optional(list(string))
+    prohibit_internet_ingress  = optional(bool)
+    prohibit_public_ip_on_vnic = optional(bool)
+    route_table_id             = optional(any)
+    security_list_ids          = optional(list(any))
   }))
   default = []
 }
 
 variable "vcn" {
   type = list(object({
-    id = number
+    id                               = number
+    compartment_id                   = any
+    cidr_block                       = optional(string)
+    cidr_blocks                      = optional(list(string))
+    defined_tags                     = optional(map(string))
+    display_name                     = optional(string)
+    dns_label                        = optional(string)
+    freeform_tags                    = optional(map(string))
+    ipv6private_cidr_blocks          = optional(list(string))
+    is_ipv6enabled                   = optional(bool)
+    is_oracle_gua_allocation_enabled = optional(bool)
+    byoipv6cidr_details = optional(list(object({
+      byoipv6range_id = any
+      ipv6cidr_block  = string
+    })))
   }))
   default = []
 }

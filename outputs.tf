@@ -583,3 +583,41 @@ output "local_peering_gateway_id" {
     oci_core_local_peering_gateway.this.*.id
   )
 }
+
+## NAT GATEWAY
+
+output "nat_gateway_id" {
+  value = try(
+    oci_core_nat_gateway.this.*.id
+  )
+}
+
+## NETWORK SECURITY GROUP && RULE
+
+output "network_security_group_id" {
+  value = try(
+    join(":", [oci_core_network_security_group.this.*.id, oci_core_network_security_group.this.*.display_name])
+  )
+}
+
+output "network_security_group_security_rule_id" {
+  value = try(
+    oci_core_network_security_group_security_rule.this.*.id
+  )
+}
+
+## PRIVATE IP
+
+output "private_ip_id_ip_address" {
+  value = try(
+    join(":", [oci_core_private_ip.this.*.id, oci_core_private_ip.this.*.ip_address])
+  )
+}
+
+## PUBLIC IP
+
+output "public_ip_id_ip_address" {
+  value = try(
+    join(":", [oci_core_public_ip.this.*.id, oci_core_public_ip.this.*.ip_address])
+  )
+}
