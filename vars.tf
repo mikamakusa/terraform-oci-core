@@ -1,3 +1,30 @@
+## DATAS
+
+variable "ipsec_connection_tunnel" {
+  type = list(object({
+    id        = number
+    ipsec_id  = any
+    tunnel_id = any
+  }))
+  default = []
+}
+
+variable "fast_connect_provider_services" {
+  type = list(object({
+    id             = number
+    compartment_id = any
+  }))
+  default = []
+}
+
+variable "fast_connect_provider_service" {
+  type = list(object({
+    id                  = number
+    provider_service_id = any
+  }))
+  default = []
+}
+
 ## TAGS ##
 
 variable "defined_tags" {
@@ -1260,15 +1287,6 @@ variable "ipsec_connection_tunnels" {
   default = []
 }
 
-variable "ipsec_connection_tunnel" {
-  type = list(object({
-    id        = number
-    ipsec_id  = any
-    tunnel_id = any
-  }))
-  default = []
-}
-
 variable "ipsec_connection_tunnel_management" {
   type = list(object({
     id        = number
@@ -1541,42 +1559,137 @@ variable "vcn" {
 
 variable "virtual_circuit" {
   type = list(object({
-    id = number
+    id                        = number
+    type                      = string
+    compartment_id            = any
+    bandwidth_shape_name      = optional(string)
+    bgp_admin_state           = optional(string)
+    customer_asn              = optional(string)
+    defined_tags              = optional(map(string))
+    display_name              = optional(string)
+    freeform_tags             = optional(map(string))
+    gateway_id                = optional(any)
+    ip_mtu                    = optional(string)
+    is_bfd_enabled            = optional(bool)
+    is_transport_mode         = optional(bool)
+    provider_service_id       = optional(any)
+    provider_service_key_name = optional(string)
+    region                    = optional(string)
+    routing_policy            = optional(list(string))
+    cross_connect_mapping = optional(list(object({
+      bgp_md5auth_key                         = optional(string)
+      cross_connect_or_cross_connect_group_id = optional(any)
+      customer_bgp_peering_ip                 = optional(string)
+      customer_bgp_peering_ipv6               = optional(string)
+      oracle_bgp_peering_ip                   = optional(string)
+      oracle_bgp_peering_ipv6                 = optional(string)
+      vlan                                    = optional(number)
+    })))
+    public_prefixes = optional(list(object({
+      cidr_block = string
+    })))
   }))
   default = []
 }
 
 variable "vlan" {
   type = list(object({
-    id = number
+    id                  = number
+    cidr_block          = string
+    compartment_id      = any
+    vcn_id              = any
+    availability_domain = optional(string)
+    defined_tags        = optional(map(string))
+    display_name        = optional(string)
+    freeform_tags       = optional(map(string))
+    nsg_ids             = optional(list(any))
+    route_table_id      = optional(any)
+    vlan_tag            = optional(number)
   }))
   default = []
 }
 
 variable "vnic_attachment" {
   type = list(object({
-    id = number
+    id           = number
+    instance_id  = any
+    display_name = optional(string)
+    nic_index    = optional(number)
+    create_vnic_details = list(object({
+      assign_ipv6ip             = optional(bool)
+      assign_private_dns_record = optional(bool)
+      assign_public_ip          = optional(string)
+      defined_tags              = optional(map(string))
+      display_name              = optional(string)
+      freeform_tags             = optional(map(string))
+      hostname_label            = optional(string)
+      nsg_ids                   = optional(list(any))
+      private_ip                = optional(string)
+      skip_source_dest_check    = optional(bool)
+      subnet_id                 = optional(any)
+      vlan_id                   = optional(any)
+    }))
   }))
   default = []
 }
 
 variable "volume" {
   type = list(object({
-    id = number
+    id                             = number
+    availability_domain            = string
+    compartment_id                 = any
+    cluster_placement_group_id     = optional(any)
+    defined_tags                   = optional(map(string))
+    display_name                   = optional(string)
+    freeform_tags                  = optional(map(string))
+    is_auto_tune_enabled           = optional(bool)
+    kms_key_id                     = optional(any)
+    size_in_gbs                    = optional(string)
+    vpus_per_gb                    = optional(string)
+    block_volume_replicas_deletion = optional(bool)
+    autotune_policies = optional(list(object({
+      autotune_type   = string
+      max_vpus_per_gb = optional(string)
+    })))
+    block_volume_replicas = optional(list(object({
+      availability_domain = string
+      display_name        = optional(string)
+    })))
+    source_details = optional(list(object({
+      id   = string
+      type = string
+    })))
   }))
   default = []
 }
 
 variable "volume_attachment" {
   type = list(object({
-    id = number
+    id                                  = number
+    attachment_type                     = string
+    instance_id                         = any
+    volume_id                           = any
+    device                              = optional(string)
+    display_name                        = optional(string)
+    encryption_in_transit_type          = optional(string)
+    is_agent_auto_iscsi_login_enabled   = optional(bool)
+    is_pv_encryption_in_transit_enabled = optional(bool)
+    is_read_only                        = optional(bool)
+    is_shareable                        = optional(bool)
+    use_chap                            = optional(bool)
   }))
   default = []
 }
 
 variable "volume_backup" {
   type = list(object({
-    id = number
+    id            = number
+    volume_id     = optional(any)
+    defined_tags  = optional(map(string))
+    display_name  = optional(string)
+    freeform_tags = optional(map(string))
+    kms_key_id    = optional(any)
+    type          = optional(string)
   }))
   default = []
 }

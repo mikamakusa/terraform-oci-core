@@ -13,3 +13,12 @@ data "oci_core_ipsec_connection_tunnel" "this" {
 
 data "oci_core_services" "this" {}
 
+data "oci_core_fast_connect_provider_services" "this" {
+  count          = length(var.compartment) == 0 ? 0 : length(var.fast_connect_provider_services)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.fast_connect_provider_services[count.index], "compartment_id")))
+}
+
+data "oci_core_fast_connect_provider_service" "this" {
+  count               = length(var.fast_connect_provider_services) == 0 ? 0 : length(var.fast_connect_provider_service)
+  provider_service_id = try(element(data.oci_core_fast_connect_provider_services.this.*.fast_connect_provider_services.0.id, lookup(var.fast_connect_provider_service[count.index], "provider_service_id")))
+}

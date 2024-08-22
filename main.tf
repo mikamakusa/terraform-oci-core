@@ -530,7 +530,7 @@ resource "oci_core_drg_attachment_management" "this" {
   dynamic "network_details" {
     for_each = try(lookup(var.drg_attachment_management[count.index], "network_details") == null ? [] : ["network_details"])
     content {
-      id                  = try(element(oci_core_virtual_network.this.*.id, lookup(network_details.value, "id")))
+      id                  = try(element(oci_core_vcn.this.*.id, lookup(network_details.value, "id")))
       type                = lookup(network_details.value, "type")
       route_table_id      = try(element(oci_core_route_table.this.*.id, lookup(network_details.value, "route_table_id")))
       ipsec_connection_id = try(element(oci_core_ipsec.this.*.id, lookup(network_details.value, "ipsec_connection_id")))
@@ -1834,39 +1834,161 @@ resource "oci_core_vcn" "this" {
 }
 
 resource "oci_core_virtual_circuit" "name" {
-  type           = ""
-  compartment_id = ""
+  count                = length(var.compartment) == 0 ? 0 : length(var.virtual_circuit)
+  type                 = lookup(var.virtual_circuit[count.index], "type")
+  compartment_id       = try(element(module.identity.*.compartment_id, lookup(var.virtual_circuit[count.index], "compartment_id")))
+  bandwidth_shape_name = lookup(var.virtual_circuit[count.index], "bandwidth_shape_name")
+  bgp_admin_state      = lookup(var.virtual_circuit[count.index], "bgp_admin_state")
+  customer_asn         = lookup(var.virtual_circuit[count.index], "customer_asn")
+  defined_tags         = merge(var.defined_tags, lookup(var.virtual_circuit[count.index], "defined_tags"))
+  display_name         = lookup(var.virtual_circuit[count.index], "display_name")
+  freeform_tags        = merge(var.freeform_tags, lookup(var.virtual_circuit[count.index], "freeform_tags"))
+  gateway_id = try(
+    element(oci_core_internet_gateway.this.*.id, lookup(var.virtual_circuit[count.index], "gateway_id")),
+    element(oci_core_service_gateway.this.*.id, lookup(var.virtual_circuit[count.index], "gateway_id")),
+    element(oci_core_nat_gateway.this.*.id, lookup(var.virtual_circuit[count.index], "gateway_id")),
+    element(oci_core_local_peering_gateway.this.*.id, lookup(var.virtual_circuit[count.index], "gateway_id"))
+  )
+  ip_mtu                    = lookup(var.virtual_circuit[count.index], "ip_mtu")
+  is_bfd_enabled            = lookup(var.virtual_circuit[count.index], "is_bfd_enabled")
+  is_transport_mode         = lookup(var.virtual_circuit[count.index], "is_transport_mode")
+  provider_service_id       = try(element(data.oci_core_fast_connect_provider_services.this.*.fast_connect_provider_services.0.id, lookup(var.virtual_circuit[count.index], "provider_service_id")))
+  provider_service_key_name = lookup(var.virtual_circuit[count.index], "provider_service_key_name")
+  region                    = lookup(var.virtual_circuit[count.index], "region")
+  routing_policy            = lookup(var.virtual_circuit[count.index], "routing_policy")
+
+  dynamic "cross_connect_mappings" {
+    for_each = try(lookup(var.virtual_circuit[count.index], "cross_connect_mappings") == null ? [] : ["cross_connect_mappings"])
+    iterator = mappings
+    content {
+      bgp_md5auth_key = lookup(mappings.value, "bgp_md5auth_key")
+      cross_connect_or_cross_connect_group_id = try(
+        element(oci_core_cross_connect.this.*.id, lookup(mappings.value, "cross_connect_or_cross_connect_group_id")),
+        element(oci_core_cross_connect_group.this.*.id, lookup(mappings.value, "cross_connect_or_cross_connect_group_id"))
+      )
+      customer_bgp_peering_ip   = lookup(mappings.value, "customer_bgp_peering_ip")
+      customer_bgp_peering_ipv6 = lookup(mappings.value, "customer_bgp_peering_ipv6")
+      oracle_bgp_peering_ip     = lookup(mappings.value, "oracle_bgp_peering_ip")
+      oracle_bgp_peering_ipv6   = lookup(mappings.value, "oracle_bgp_peering_ipv6")
+      vlan                      = lookup(mappings.value, "vlan")
+    }
+  }
+
+  dynamic "public_prefixes" {
+    for_each = try(lookup(var.virtual_circuit[count.index], "public_prefixes") == null ? [] : ["public_prefixes"])
+    iterator = public
+    content {
+      cidr_block = lookup(public.value, "cidr_block")
+    }
+  }
 }
 
 resource "oci_core_vlan" "this" {
-  cidr_block     = ""
-  compartment_id = ""
-  vcn_id         = ""
+  count               = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.vlan)
+  cidr_block          = lookup(var.virtual_circuit[count.index], "cidr_block")
+  compartment_id      = try(element(module.identity.*.compartment_id, lookup(var.virtual_circuit[count.index], "compartment_id")))
+  vcn_id              = try(element(oci_core_vcn.this.*.id, lookup(var.virtual_circuit[count.index], "vcn_id")))
+  availability_domain = lookup(var.virtual_circuit[count.index], "availability_domain")
+  defined_tags        = merge(var.defined_tags, lookup(var.vlan[count.index], "defined_tags"))
+  display_name        = lookup(var.virtual_circuit[count.index], "display_name")
+  freeform_tags       = merge(var.defined_tags, lookup(var.vlan[count.index], "freeform_tags"))
+  nsg_ids             = [lookup(var.virtual_circuit[count.index], "nsg_ids")]
+  route_table_id      = try(element(oci_core_route_table.this.*.id, lookup(var.virtual_circuit[count.index], "route_table_id")))
+  vlan_tag            = lookup(var.virtual_circuit[count.index], "vlan_tag")
 }
 
 resource "oci_core_vnic_attachment" "this" {
-  instance_id = ""
+  count        = length(var.instance) == 0 ? 0 : length(var.vnic_attachment)
+  instance_id  = try(element(oci_core_instance.this.*.id, lookup(var.vnic_attachment[count.index], "instance_id")))
+  display_name = lookup(var.vnic_attachment[count.index], "display_name")
+  nic_index    = lookup(var.vnic_attachment[count.index], "nic_index")
 
   dynamic "create_vnic_details" {
-    for_each = ""
+    for_each = try(lookup(var.vnic_attachment[count.index], "create_vnic_details") == null ? [] : ["create_vnic_details"])
+    iterator = details
     content {
-
+      assign_ipv6ip             = lookup(details.value, "assign_ipv6ip")
+      assign_private_dns_record = lookup(details.value, "assign_private_dns_record")
+      assign_public_ip          = lookup(details.value, "assign_public_ip")
+      defined_tags              = merge(var.defined_tags, lookup(details.value, "defined_tags"))
+      display_name              = lookup(details.value, "display_name")
+      freeform_tags             = merge(var.defined_tags, lookup(details.value, "freeform_tags"))
+      hostname_label            = lookup(details.value, "hostname_label")
+      nsg_ids                   = lookup(details.value, "nsg_ids")
+      private_ip                = lookup(details.value, "private_ip")
+      skip_source_dest_check    = lookup(details.value, "skip_source_dest_check")
+      subnet_id                 = try(element(oci_core_subnet.this.*.id, lookup(details.value, "subnet_id")))
+      vlan_id                   = try(element(oci_core_vlan.this.*.id, lookup(details.value, "vlan_id")))
     }
   }
 }
 
 resource "oci_core_volume" "this" {
-  availability_domain = ""
-  compartment_id      = ""
+  count                          = length(var.compartment) == 0 ? 0 : length(var.volume)
+  availability_domain            = lookup(var.volume[count.index], "availability_domain")
+  compartment_id                 = try(element(module.identity.*.compartment_id, lookup(var.volume[count.index], "compartment_id")))
+  cluster_placement_group_id     = try(element(module.identity.*.group_id, lookup(var.volume[count.index], "cluster_placement_group_id")))
+  defined_tags                   = merge(var.defined_tags, lookup(var.volume[count.index], "defined_tags"))
+  display_name                   = lookup(var.volume[count.index], "display_name")
+  freeform_tags                  = merge(var.defined_tags, lookup(var.volume[count.index], "freeform_tags"))
+  is_auto_tune_enabled           = lookup(var.volume[count.index], "is_auto_tune_enabled")
+  kms_key_id                     = try(element(module.kms.*.key_id, lookup(var.volume[count.index], "kms_key_id")))
+  size_in_gbs                    = lookup(var.volume[count.index], "size_in_gbs")
+  vpus_per_gb                    = lookup(var.volume[count.index], "vpus_per_gb")
+  block_volume_replicas_deletion = lookup(var.volume[count.index], "block_volume_replicas_deletion")
+
+  dynamic "autotune_policies" {
+    for_each = try(lookup(var.volume[count.index], "autotune_policies") == null ? [] : ["autotune_policies"])
+    iterator = autotune
+    content {
+      autotune_type   = lookup(autotune.value, "autotune_type")
+      max_vpus_per_gb = lookup(autotune.value, "max_vpus_per_gb")
+    }
+  }
+
+  dynamic "block_volume_replicas" {
+    for_each = try(lookup(var.volume[count.index], "block_volume_replicas") == null ? [] : ["block_volume_replicas"])
+    iterator = block_volume
+    content {
+      availability_domain = lookup(block_volume.value, "availability_domain")
+      display_name        = lookup(block_volume.value, "display_name")
+    }
+  }
+
+  dynamic "source_details" {
+    for_each = try(lookup(var.volume[count.index], "source_details") == null ? [] : ["source_details"])
+    iterator = source
+    content {
+      id   = lookup(source.value, "id")
+      type = lookup(source.value, "type")
+    }
+  }
 }
 
 resource "oci_core_volume_attachment" "this" {
-  attachment_type = ""
-  instance_id     = ""
-  volume_id       = ""
+  count                               = (length(var.instance) && length(var.volume)) == 0 ? 0 : length(var.volume_attachment)
+  attachment_type                     = lookup(var.volume_attachment[count.index], "attachment_type")
+  instance_id                         = try(element(oci_core_instance.this.*.id, lookup(var.volume_attachment[count.index], "instance_id")))
+  volume_id                           = try(element(oci_core_volume.this.*.id, lookup(var.volume_attachment[count.index], "volume_id")))
+  device                              = lookup(var.volume_attachment[count.index], "device")
+  display_name                        = lookup(var.volume_attachment[count.index], "display_name")
+  encryption_in_transit_type          = lookup(var.volume_attachment[count.index], "encryption_in_transit_type")
+  is_agent_auto_iscsi_login_enabled   = lookup(var.volume_attachment[count.index], "is_agent_auto_iscsi_login_enabled")
+  is_pv_encryption_in_transit_enabled = lookup(var.volume_attachment[count.index], "is_pv_encryption_in_transit_enabled")
+  is_read_only                        = lookup(var.volume_attachment[count.index], "is_read_only")
+  is_shareable                        = lookup(var.volume_attachment[count.index], "is_shareable")
+  use_chap                            = lookup(var.volume_attachment[count.index], "use_chap")
 }
 
-resource "oci_core_volume_backup" "this" {}
+resource "oci_core_volume_backup" "this" {
+  count         = length(var.volume) == 0 ? 0 : length(var.volume_backup)
+  volume_id     = try(element(oci_core_volume.this.*.id, lookup(var.volume_backup[count.index], "volume_id")))
+  defined_tags  = merge(var.defined_tags, lookup(var.volume_backup[count.index], "defined_tags"))
+  display_name  = lookup(var.volume_backup[count.index], "display_name")
+  freeform_tags = merge(var.defined_tags, lookup(var.volume_backup[count.index], "freeform_tags"))
+  kms_key_id    = try(element(module.kms.*.key_id, lookup(var.volume_backup[count.index], "kms_key_id")))
+  type          = lookup(var.volume_backup[count.index], "type")
+}
 
 resource "oci_core_volume_backup_policy" "this" {
   compartment_id = ""
