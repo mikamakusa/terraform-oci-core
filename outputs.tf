@@ -452,12 +452,6 @@ output "instance_id" {
   )
 }
 
-output "instance_configuration_id" {
-  value = try(
-    oci_core_instance.this.*.instance_configuration_id
-  )
-}
-
 ## INSTANCE CONSOLE CONNECTION
 
 output "instance_console_connection_id" {
@@ -469,5 +463,123 @@ output "instance_console_connection_id" {
 output "instance_console_connection_state" {
   value = try(
     oci_core_instance_console_connection.this.*.state
+  )
+}
+
+## INSTANCE CONFIGURATION
+
+output "instance_configuration_id" {
+  value = try(
+    oci_core_instance_configuration.this.*.id
+  )
+}
+
+output "instance_configuration_display_name" {
+  value = try(
+    oci_core_instance_configuration.this.*.display_name
+  )
+}
+
+## INSTANCE POOL
+
+output "instance_pool_id" {
+  value = try(
+    oci_core_instance_pool.this.*.id
+  )
+}
+
+output "instance_pool_display_name" {
+  value = try(
+    oci_core_instance_pool.this.*.display_name
+  )
+}
+
+output "instance_pool_configuration_id" {
+  value = try(
+    oci_core_instance_pool.this.*.instance_configuration_id
+  )
+}
+
+## INSTANCE POOL INSTANCE
+
+output "instance_pool_instance_id" {
+  value = try(
+    oci_core_instance_pool_instance.this.*.id
+  )
+}
+
+## INTERNET GATEWAY
+
+output "internet_gateway_id" {
+  value = try(
+    oci_core_internet_gateway.this.*.id
+  )
+}
+
+## IPSEC
+
+output "ipsec_id" {
+  value = try(
+    oci_core_ipsec.this.*.id
+  )
+}
+
+## IPSEC CONNECTION TUNNEL MANAGEMENT
+
+output "ipsec_connection_tunnel_management_id" {
+  value = try(
+    oci_core_ipsec_connection_tunnel_management.this.*.id
+  )
+}
+
+output "ipsec_connection_tunnel_management_state" {
+  value = try(
+    oci_core_ipsec_connection_tunnel_management.this.*.state
+  )
+}
+
+output "ipsec_connection_tunnel_management_vpn_ip" {
+  value = try(
+    oci_core_ipsec_connection_tunnel_management.this.*.vpn_ip
+  )
+}
+
+output "ipsec_connection_tunnel_management_nat_translation_enabled" {
+  value = try(
+    oci_core_ipsec_connection_tunnel_management.this.*.nat_translation_enabled
+  )
+}
+
+## IPV6
+
+output "ipv6_id" {
+  value = try(
+    oci_core_ipv6.this.*.id
+  )
+}
+
+output "ipv6_state" {
+  value = try(
+    oci_core_ipv6.this.*.state
+  )
+}
+
+output "ipv6_vnic_id" {
+  value = try(
+    oci_core_ipv6.this.*.vnic_id
+  )
+}
+
+output "ipv6_ip_address" {
+  value = try(
+    oci_core_ipv6.this.*.ip_address
+  )
+}
+
+## LOCAL PEERING GATEWAY
+
+output "local_peering_gateway_id" {
+  value = try(
+    oci_core_local_peering_gateway.this.*.id
   )
 }

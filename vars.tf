@@ -1137,12 +1137,40 @@ variable "instance_configuration" {
 
 variable "instance_pool" {
   type = list(object({
-    id                        = number
-    compartment_id            = any
-    instance_configuration_id = any
-    size                      = number
+    id                              = number
+    compartment_id                  = any
+    instance_configuration_id       = any
+    size                            = number
+    defined_tags                    = optional(map(string))
+    display_name                    = optional(string)
+    freeform_tags                   = optional(map(string))
+    instance_display_name_formatter = optional(string)
+    instance_hostname_formatter     = optional(string)
+    state                           = optional(string)
+    load_balancer = optional(list(object({
+      backend_set_name = any
+      load_balancer_id = any
+      port             = number
+      vnic_selection   = string
+    })))
     placement_configuration = list(object({
       availability_domaine = string
+      fault_domains        = optional(list(string))
+      primary_subnet_id    = optional(any)
+      primary_vnic_subnets = optional(list(object({
+        subnet_id        = any
+        is_assign_ipv6ip = optional(bool)
+        ipv6address_ipv6subnet_cidr_pair_details = optional(list(object({
+          ipv6subnet_cidr = optional(string)
+        })))
+      })))
+      secondary_vnic_subnets = optional(list(object({
+        subnet_id    = any
+        display_name = optional(string)
+        ipv6address_ipv6subnet_cidr_pair_details = optional(list(object({
+          ipv6subnet_cidr = optional(string)
+        })))
+      })))
     }))
   }))
   default = []
@@ -1150,49 +1178,144 @@ variable "instance_pool" {
 
 variable "instance_pool_instance" {
   type = list(object({
-    id = number
+    id               = number
+    instance_id      = any
+    instance_pool_id = any
   }))
   default = []
 }
 
 variable "internet_gateway" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    vcn_id         = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    enabled        = optional(bool)
+    freeform_tags  = optional(map(string))
+    route_table_id = optional(any)
   }))
   default = []
 }
 
 variable "ipsec" {
   type = list(object({
-    id = number
+    id                        = number
+    compartment_id            = any
+    cpe_id                    = any
+    drg_id                    = any
+    static_routes             = list(string)
+    cpe_local_identifier      = optional(string)
+    cpe_local_identifier_type = optional(string)
+    defined_tags              = optional(map(string))
+    display_name              = optional(string)
+    freeform_tags             = optional(map(string))
+  }))
+  default = []
+}
+
+variable "ipsec_connection_tunnels" {
+  type = list(object({
+    id                      = number
+    ipsec_id                = any
+    tunnel_id               = any
+    display_name            = optional(string)
+    shared_secret           = optional(string)
+    ike_version             = optional(string)
+    routing                 = optional(string)
+    nat_translation_enabled = optional(string)
+    oracle_can_initiate     = optional(string)
+    bgp_session_info = optional(list(object({
+      customer_bgp_asn        = optional(string)
+      customer_interface_ip   = optional(string)
+      customer_interface_ipv6 = optional(string)
+      oracle_interface_ip     = optional(string)
+      oracle_interface_ipv6   = optional(string)
+    })))
+    dpd_config = optional(list(object({
+      dpd_mode           = optional(string)
+      dpd_timeout_in_sec = optional(number)
+    })))
+    encryption_domain_config = optional(list(object({
+      cpe_traffic_selector    = optional(list(string))
+      oracle_traffic_selector = optional(list(string))
+    })))
+    phase_one_details = optional(list(object({
+      custom_authentication_algorithm = optional(string)
+      custom_dh_group                 = optional(string)
+      custom_encryption_algorithm     = optional(string)
+      is_custom_phase_one_config      = optional(bool)
+      lifetime                        = optional(number)
+    })))
+    phase_two_details = optional(list(object({
+      custom_authentication_algorithm = optional(string)
+      custom_encryption_algorithm     = optional(string)
+      dh_group                        = optional(string)
+      is_custom_phase_two_config      = optional(bool)
+      is_pfs_enabled                  = optional(bool)
+      lifetime                        = optional(number)
+    })))
+  }))
+  default = []
+}
+
+variable "ipsec_connection_tunnel" {
+  type = list(object({
+    id        = number
+    ipsec_id  = any
+    tunnel_id = any
   }))
   default = []
 }
 
 variable "ipsec_connection_tunnel_management" {
   type = list(object({
-    id = number
+    id        = number
+    ipsec_id  = any
+    tunnel_id = any
   }))
   default = []
 }
 
 variable "ipv6" {
   type = list(object({
-    id = number
+    id              = number
+    vnic_id         = any
+    defined_tags    = optional(map(string))
+    display_name    = optional(string)
+    freeform_tags   = optional(map(string))
+    ip_address      = optional(string)
+    ipv6subnet_cidr = optional(string)
   }))
   default = []
 }
 
 variable "local_peering_gateway" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    vcn_id         = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
+    peer_id        = optional(any)
+    route_table_id = optional(any)
   }))
   default = []
 }
 
 variable "nat_gateway" {
   type = list(object({
-    id = number
+    id             = number
+    compartment_id = any
+    vcn_id         = any
+    block_traffic  = optional(bool)
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags  = optional(map(string))
+    public_ip_id   = optional(any)
+    route_table_id = optional(any)
   }))
   default = []
 }

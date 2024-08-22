@@ -217,7 +217,7 @@ resource "oci_core_cluster_network" "this" {
   dynamic "instance_pools" {
     for_each = lookup(var.cluster_network[count.index], "instance_pools")
     content {
-      instance_configuration_id = ""
+      instance_configuration_id = try(element(oci_core_instance_configuration.this.*.id, lookup(instance_pools.value, "instance_configuration_id")))
       size                      = lookup(instance_pools.value, "size")
       defined_tags              = merge(var.defined_tags, lookup(instance_pools.value, "defined_tags"))
       freeform_tags             = merge(var.freeform_tags, lookup(instance_pools.value, "freeform_tags"))
@@ -815,11 +815,11 @@ resource "oci_core_instance_console_connection" "this" {
 resource "oci_core_instance_configuration" "this" {
   count          = length(var.compartment) == 0 ? 0 : length(var.instance_configuration)
   compartment_id = try(element(module.identity.*.compartment_id, lookup(var.instance_configuration[count.index], "compartment_id")))
-  defined_tags   = {}
+  defined_tags   = merge(var.defined_tags, lookup(var.instance_configuration[count.index], "defined_tags"))
   display_name   = lookup(var.instance_configuration[count.index], "display_name")
-  freeform_tags  = {}
+  freeform_tags  = merge(var.freeform_tags, lookup(var.instance_configuration[count.index], "freeform_tags"))
   instance_id    = try(element(oci_core_instance.this.*.id, lookup(var.instance_configuration[count.index], "instance_id")))
-  source         = ""
+  source         = lookup(var.instance_configuration[count.index], "source")
 
   dynamic "instance_details" {
     for_each = try(lookup(var.instance_configuration[count.index], "instance_details") == null ? [] : ["instance_details"])
@@ -827,56 +827,61 @@ resource "oci_core_instance_configuration" "this" {
       instance_type = lookup(instance_details.value, "instance_type")
 
       dynamic "block_volumes" {
-        for_each = ""
+        for_each = try(lookup(instance_details.value, "block_volumes") == null ? [] : ["block_volumes"])
         content {
           dynamic "attach_details" {
-            for_each = ""
+            for_each = try(lookup(block_volumes.value, "attach_details") == null ? [] : ["attach_details"])
+            iterator = attach
             content {
-              type                                = ""
-              device                              = ""
-              display_name                        = ""
-              is_pv_encryption_in_transit_enabled = true
-              is_read_only                        = true
-              is_shareable                        = true
-              use_chap                            = true
+              type                                = lookup(attach.value, "type")
+              device                              = lookup(attach.value, "device")
+              display_name                        = lookup(attach.value, "display_name")
+              is_pv_encryption_in_transit_enabled = lookup(attach.value, "is_pv_encryption_in_transit_enabled")
+              is_read_only                        = lookup(attach.value, "is_read_only")
+              is_shareable                        = lookup(attach.value, "is_shareable")
+              use_chap                            = lookup(attach.value, "use_chap")
             }
           }
 
           dynamic "create_details" {
-            for_each = ""
+            for_each = try(lookup(block_volumes.value, "create_details") == null ? [] : ["create_details"])
+            iterator = create
             content {
-              availability_domain        = ""
-              backup_policy_id           = ""
-              cluster_placement_group_id = ""
-              compartment_id             = ""
-              defined_tags               = {}
-              display_name               = ""
-              freeform_tags              = {}
-              is_auto_tune_enabled       = true
-              kms_key_id                 = ""
-              size_in_gbs                = ""
-              vpus_per_gb                = ""
+              availability_domain        = lookup(create.value, "availability_domain")
+              backup_policy_id           = try(element(oci_core_volume_backup_policy.this.*.id, lookup(create.value, "backup_policy_id")))
+              cluster_placement_group_id = try(element(module.identity.*.group_id, lookup(create.value, "cluster_placement_group_id")))
+              compartment_id             = try(element(module.identity.*.compartment_id, lookup(create.value, "compartment_id")))
+              defined_tags               = lookup(create.value, "defined_tags")
+              display_name               = lookup(create.value, "display_name")
+              freeform_tags              = lookup(create.value, "freeform_tags")
+              is_auto_tune_enabled       = lookup(create.value, "is_auto_tune_enabled")
+              kms_key_id                 = try(element(module.kms.*.key_id, lookup(create.value, "kms_key_id")))
+              size_in_gbs                = lookup(create.value, "size_in_gbs")
+              vpus_per_gb                = lookup(create.value, "vpus_per_gb")
 
               dynamic "autotune_policies" {
-                for_each = ""
+                for_each = try(lookup(create.value, "autotune_policies") == null ? [] : ["autotune_policies"])
+                iterator = autotune
                 content {
-                  autotune_type   = ""
-                  max_vpus_per_gb = ""
+                  autotune_type   = lookup(autotune.value, "autotune_type")
+                  max_vpus_per_gb = lookup(autotune.value, "max_vpus_per_gb")
                 }
               }
 
               dynamic "block_volume_replicas" {
-                for_each = ""
+                for_each = try(lookup(create.value, "block_volume_replicas") == null ? [] : ["block_volume_replicas"])
+                iterator = replicas
                 content {
-                  availability_domain = ""
-                  display_name        = ""
+                  availability_domain = lookup(replicas.value, "availability_domain")
+                  display_name        = lookup(replicas.value, "display_name")
                 }
               }
 
               dynamic "source_details" {
-                for_each = ""
+                for_each = try(lookup(create.value, "source_details") == null ? [] : ["source_details"])
+                iterator = details
                 content {
-                  type = ""
+                  type = lookup(details.value, "type")
                 }
               }
             }
@@ -885,27 +890,28 @@ resource "oci_core_instance_configuration" "this" {
       }
 
       dynamic "launch_details" {
-        for_each = ""
+        for_each = try(lookup(instance_details.value, "launch_details") == null ? [] : ["launch_details"])
+        iterator = launch
         content {
-          availability_domain                 = ""
-          capacity_reservation_id             = ""
-          cluster_placement_group_id          = ""
-          compartment_id                      = ""
-          dedicated_vm_host_id                = ""
-          defined_tags                        = ""
-          display_name                        = ""
-          extended_metadata                   = {}
-          fault_domain                        = ""
-          freeform_tags                       = {}
-          ipxe_script                         = ""
-          is_pv_encryption_in_transit_enabled = true
-          launch_mode                         = ""
-          metadata                            = {}
-          preferred_maintenance_action        = ""
-          shape                               = ""
+          availability_domain                 = lookup(launch.value, "availability_domain")
+          capacity_reservation_id             = try(element(oci_core_compute_capacity_reservation.this.*.id, lookup(launch.value, "capacity_reservation_id")))
+          cluster_placement_group_id          = try(element(module.identity.*.group_id, lookup(launch.value, "cluster_placement_group_id")))
+          compartment_id                      = try(element(module.identity.*.compartment_id, lookup(launch.value, "compartment_id")))
+          dedicated_vm_host_id                = try(element(oci_core_dedicated_vm_host.this.*.id, lookup(launch.value, "dedicated_vm_host_id")))
+          defined_tags                        = merge(var.defined_tags, lookup(launch.value, "defined_tags"))
+          display_name                        = lookup(launch.value, "display_name")
+          extended_metadata                   = lookup(launch.value, "extended_metadata")
+          fault_domain                        = lookup(launch.value, "fault_domain")
+          freeform_tags                       = merge(var.freeform_tags, lookup(launch.value, "freeform_tags"))
+          ipxe_script                         = lookup(launch.value, "ipxe_script")
+          is_pv_encryption_in_transit_enabled = lookup(launch.value, "is_pv_encryption_in_transit_enabled")
+          launch_mode                         = lookup(launch.value, "launch_mode")
+          metadata                            = lookup(launch.value, "metadata")
+          preferred_maintenance_action        = lookup(launch.value, "preferred_maintenance_action")
+          shape                               = lookup(launch.value, "shape")
 
           dynamic "agent_config" {
-            for_each = try(lookup(launch_details.value, "agent_config") == null ? [] : ["agent_config"])
+            for_each = try(lookup(launch.value, "agent_config") == null ? [] : ["agent_config"])
             iterator = agent
             content {
               are_all_plugins_disabled = lookup(agent.value, "are_all_plugins_disabled")
@@ -923,7 +929,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "availability_config" {
-            for_each = try(lookup(launch_details.value, "availability_config") == null ? [] : ["availability_config"])
+            for_each = try(lookup(launch.value, "availability_config") == null ? [] : ["availability_config"])
             iterator = availability
             content {
               is_live_migration_preferred = lookup(availability.value, "is_live_migration_preferred")
@@ -932,7 +938,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "create_vnic_details" {
-            for_each = try(lookup(launch_details.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
+            for_each = try(lookup(launch.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
             iterator = vnic
             content {
               assign_ipv6ip             = lookup(vnic.value, "assign_ipv6ip")
@@ -951,7 +957,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "instance_options" {
-            for_each = try(lookup(launch_details.value, "instance_options") == null ? [] : ["instance_options"])
+            for_each = try(lookup(launch.value, "instance_options") == null ? [] : ["instance_options"])
             iterator = instance
             content {
               are_legacy_imds_endpoints_disabled = lookup(instance.value, "are_legacy_imds_endpoints_disabled")
@@ -959,7 +965,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "launch_options" {
-            for_each = try(lookup(launch_details.value, "launch_options") == null ? [] : ["launch_options"])
+            for_each = try(lookup(launch.value, "launch_options") == null ? [] : ["launch_options"])
             iterator = launch
             content {
               boot_volume_type                    = lookup(launch.value, "boot_volume_type")
@@ -972,7 +978,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "launch_volume_attachments" {
-            for_each = try(lookup(launch_details.value, "launch_volume_attachments") == null ? [] : ["launch_volume_attachments"])
+            for_each = try(lookup(launch.value, "launch_volume_attachments") == null ? [] : ["launch_volume_attachments"])
             iterator = volume
             content {
               type                              = lookup(volume.value, "type")
@@ -1001,7 +1007,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "platform_config" {
-            for_each = try(lookup(launch_details.value, "platform_config") == null ? [] : ["platform_config"])
+            for_each = try(lookup(launch.value, "platform_config") == null ? [] : ["platform_config"])
             iterator = platform
             content {
               type                                           = lookup(platform.value, "type")
@@ -1020,7 +1026,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "preemptible_instance_config" {
-            for_each = try(lookup(launch_details.value, "preemptible_instance_config") == null ? [] : ["preemptible_instance_config"])
+            for_each = try(lookup(launch.value, "preemptible_instance_config") == null ? [] : ["preemptible_instance_config"])
             iterator = preemptible
             content {
               dynamic "preemption_action" {
@@ -1035,7 +1041,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "shape_config" {
-            for_each = try(lookup(launch_details.value, "shape_config") == null ? [] : ["shape_config"])
+            for_each = try(lookup(launch.value, "shape_config") == null ? [] : ["shape_config"])
             iterator = shape
             content {
               baseline_ocpu_utilization = lookup(shape.value, "baseline_ocpu_utilization")
@@ -1047,7 +1053,7 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "source_details" {
-            for_each = try(lookup(launch_details.value, "source_details") == null ? [] : ["source_details"])
+            for_each = try(lookup(launch.value, "source_details") == null ? [] : ["source_details"])
             iterator = source
             content {
               source_type = lookup(source.value, "source_type")
@@ -1073,61 +1079,67 @@ resource "oci_core_instance_configuration" "this" {
       }
 
       dynamic "options" {
-        for_each = ""
+        for_each = try(lookup(instance_details.value, "options") == null ? [] : ["options"])
         content {
           dynamic "block_volumes" {
-            for_each = ""
+            for_each = try(lookup(options.value, "block_volumes") == null ? [] : ["block_volumes"])
+            iterator = block
             content {
-              volume_id = ""
+              volume_id = try(element(oci_core_volume.this.*.id, lookup(block.value, "volume_id")))
 
               dynamic "attach_details" {
-                for_each = ""
+                for_each = try(lookup(block.value, "attach_details") == null ? [] : ["attach_details"])
+                iterator = attach
                 content {
-                  type                                = ""
-                  device                              = ""
-                  display_name                        = ""
-                  is_pv_encryption_in_transit_enabled = true
-                  is_read_only                        = true
-                  is_shareable                        = true
-                  use_chap                            = true
+                  type                                = lookup(attach.value, "type")
+                  device                              = lookup(attach.value, "device")
+                  display_name                        = lookup(attach.value, "display_name")
+                  is_pv_encryption_in_transit_enabled = lookup(attach.value, "is_pv_encryption_in_transit_enabled")
+                  is_read_only                        = lookup(attach.value, "is_read_only")
+                  is_shareable                        = lookup(attach.value, "is_shareable")
+                  use_chap                            = lookup(attach.value, "use_chap")
                 }
               }
 
               dynamic "create_details" {
-                for_each = ""
+                for_each = try(lookup(block.value, "create_details") == null ? [] : ["create_details"])
+                iterator = create
                 content {
-                  availability_domain        = ""
-                  backup_policy_id           = ""
-                  cluster_placement_group_id = ""
-                  compartment_id             = ""
-                  defined_tags               = {}
-                  display_name               = ""
-                  freeform_tags              = {}
-                  is_auto_tune_enabled       = true
-                  kms_key_id                 = ""
-                  size_in_gbs                = ""
-                  vpus_per_gb                = ""
+                  availability_domain        = lookup(create.value, "availability_domain")
+                  backup_policy_id           = try(element(oci_core_volume_backup_policy.this.*.id, lookup(create.value, "backup_policy_id")))
+                  cluster_placement_group_id = try(element(module.identity.*.group_id, lookup(create.value, "cluster_placement_group_id")))
+                  compartment_id             = try(element(module.identity.*.compartment_id, lookup(create.value, "compartment_id")))
+                  defined_tags               = lookup(create.value, "defined_tags")
+                  display_name               = lookup(create.value, "display_name")
+                  freeform_tags              = lookup(create.value, "freeform_tags")
+                  is_auto_tune_enabled       = lookup(create.value, "is_auto_tune_enabled")
+                  kms_key_id                 = try(element(module.kms.*.key_id, lookup(create.value, "kms_key_id")))
+                  size_in_gbs                = lookup(create.value, "size_in_gbs")
+                  vpus_per_gb                = lookup(create.value, "vpus_per_gb")
 
                   dynamic "autotune_policies" {
-                    for_each = ""
+                    for_each = try(lookup(create.value, "autotune_policies") == null ? [] : ["autotune_policies"])
+                    iterator = autotune
                     content {
-                      autotune_type   = ""
-                      max_vpus_per_gb = ""
+                      autotune_type   = lookup(autotune.value, "autotune_type")
+                      max_vpus_per_gb = lookup(autotune.value, "max_vpus_per_gb")
                     }
                   }
 
                   dynamic "block_volume_replicas" {
-                    for_each = ""
+                    for_each = try(lookup(create.value, "block_volume_replicas") == null ? [] : ["block_volume_replicas"])
+                    iterator = replicas
                     content {
-                      availability_domain = ""
-                      display_name        = ""
+                      availability_domain = lookup(replicas.value, "availability_domain")
+                      display_name        = lookup(replicas.value, "display_name")
                     }
                   }
 
                   dynamic "source_details" {
-                    for_each = ""
+                    for_each = try(lookup(create.value, "source_details") == null ? [] : ["source_details"])
+                    iterator = details
                     content {
-                      type = ""
+                      type = lookup(details.value, "type")
                     }
                   }
                 }
@@ -1136,27 +1148,28 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "launch_details" {
-            for_each = ""
+            for_each = try(lookup(instance_details.value, "launch_details") == null ? [] : ["launch_details"])
+            iterator = launch
             content {
-              availability_domain                 = ""
-              capacity_reservation_id             = ""
-              cluster_placement_group_id          = ""
-              compartment_id                      = ""
-              dedicated_vm_host_id                = ""
-              defined_tags                        = ""
-              display_name                        = ""
-              extended_metadata                   = {}
-              fault_domain                        = ""
-              freeform_tags                       = {}
-              ipxe_script                         = ""
-              is_pv_encryption_in_transit_enabled = true
-              launch_mode                         = ""
-              metadata                            = {}
-              preferred_maintenance_action        = ""
-              shape                               = ""
+              availability_domain                 = lookup(launch.value, "availability_domain")
+              capacity_reservation_id             = try(element(oci_core_compute_capacity_reservation.this.*.id, lookup(launch.value, "capacity_reservation_id")))
+              cluster_placement_group_id          = try(element(module.identity.*.group_id, lookup(launch.value, "cluster_placement_group_id")))
+              compartment_id                      = try(element(module.identity.*.compartment_id, lookup(launch.value, "compartment_id")))
+              dedicated_vm_host_id                = try(element(oci_core_dedicated_vm_host.this.*.id, lookup(launch.value, "dedicated_vm_host_id")))
+              defined_tags                        = merge(var.defined_tags, lookup(launch.value, "defined_tags"))
+              display_name                        = lookup(launch.value, "display_name")
+              extended_metadata                   = lookup(launch.value, "extended_metadata")
+              fault_domain                        = lookup(launch.value, "fault_domain")
+              freeform_tags                       = merge(var.freeform_tags, lookup(launch.value, "freeform_tags"))
+              ipxe_script                         = lookup(launch.value, "ipxe_script")
+              is_pv_encryption_in_transit_enabled = lookup(launch.value, "is_pv_encryption_in_transit_enabled")
+              launch_mode                         = lookup(launch.value, "launch_mode")
+              metadata                            = lookup(launch.value, "metadata")
+              preferred_maintenance_action        = lookup(launch.value, "preferred_maintenance_action")
+              shape                               = lookup(launch.value, "shape")
 
               dynamic "agent_config" {
-                for_each = try(lookup(launch_details.value, "agent_config") == null ? [] : ["agent_config"])
+                for_each = try(lookup(launch.value, "agent_config") == null ? [] : ["agent_config"])
                 iterator = agent
                 content {
                   are_all_plugins_disabled = lookup(agent.value, "are_all_plugins_disabled")
@@ -1174,7 +1187,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "availability_config" {
-                for_each = try(lookup(launch_details.value, "availability_config") == null ? [] : ["availability_config"])
+                for_each = try(lookup(launch.value, "availability_config") == null ? [] : ["availability_config"])
                 iterator = availability
                 content {
                   is_live_migration_preferred = lookup(availability.value, "is_live_migration_preferred")
@@ -1183,7 +1196,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "create_vnic_details" {
-                for_each = try(lookup(launch_details.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
+                for_each = try(lookup(launch.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
                 iterator = vnic
                 content {
                   assign_ipv6ip             = lookup(vnic.value, "assign_ipv6ip")
@@ -1202,7 +1215,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "instance_options" {
-                for_each = try(lookup(launch_details.value, "instance_options") == null ? [] : ["instance_options"])
+                for_each = try(lookup(launch.value, "instance_options") == null ? [] : ["instance_options"])
                 iterator = instance
                 content {
                   are_legacy_imds_endpoints_disabled = lookup(instance.value, "are_legacy_imds_endpoints_disabled")
@@ -1210,7 +1223,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "launch_options" {
-                for_each = try(lookup(launch_details.value, "launch_options") == null ? [] : ["launch_options"])
+                for_each = try(lookup(launch.value, "launch_options") == null ? [] : ["launch_options"])
                 iterator = launch
                 content {
                   boot_volume_type                    = lookup(launch.value, "boot_volume_type")
@@ -1223,7 +1236,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "launch_volume_attachments" {
-                for_each = try(lookup(launch_details.value, "launch_volume_attachments") == null ? [] : ["launch_volume_attachments"])
+                for_each = try(lookup(launch.value, "launch_volume_attachments") == null ? [] : ["launch_volume_attachments"])
                 iterator = volume
                 content {
                   type                              = lookup(volume.value, "type")
@@ -1252,7 +1265,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "platform_config" {
-                for_each = try(lookup(launch_details.value, "platform_config") == null ? [] : ["platform_config"])
+                for_each = try(lookup(launch.value, "platform_config") == null ? [] : ["platform_config"])
                 iterator = platform
                 content {
                   type                             = lookup(platform.value, "type")
@@ -1271,7 +1284,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "preemptible_instance_config" {
-                for_each = try(lookup(launch_details.value, "preemptible_instance_config") == null ? [] : ["preemptible_instance_config"])
+                for_each = try(lookup(launch.value, "preemptible_instance_config") == null ? [] : ["preemptible_instance_config"])
                 iterator = preemptible
                 content {
                   dynamic "preemption_action" {
@@ -1286,7 +1299,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "shape_config" {
-                for_each = try(lookup(launch_details.value, "shape_config") == null ? [] : ["shape_config"])
+                for_each = try(lookup(launch.value, "shape_config") == null ? [] : ["shape_config"])
                 iterator = shape
                 content {
                   baseline_ocpu_utilization = lookup(shape.value, "baseline_ocpu_utilization")
@@ -1298,7 +1311,7 @@ resource "oci_core_instance_configuration" "this" {
               }
 
               dynamic "source_details" {
-                for_each = try(lookup(launch_details.value, "source_details") == null ? [] : ["source_details"])
+                for_each = try(lookup(launch.value, "source_details") == null ? [] : ["source_details"])
                 iterator = source
                 content {
                   source_type = lookup(source.value, "source_type")
@@ -1324,31 +1337,34 @@ resource "oci_core_instance_configuration" "this" {
           }
 
           dynamic "secondary_vnics" {
-            for_each = ""
+            for_each = try(lookup(instance_details.value, "secondary_vnics") == null ? [] : ["secondary_vnics"])
+            iterator = vnics
             content {
-              display_name = ""
-              nic_index    = 0
+              display_name = lookup(vnics.value, "display_name")
+              nic_index    = lookup(vnics.value, "nic_index")
 
               dynamic "create_vnic_details" {
-                for_each = ""
+                for_each = try(lookup(vnics.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
+                iterator = details
                 content {
-                  assign_ipv6ip             = true
-                  assign_private_dns_record = true
-                  assign_public_ip          = true
-                  defined_tags              = {}
-                  display_name              = ""
-                  freeform_tags             = {}
-                  hostname_label            = ""
-                  nsg_ids                   = []
-                  private_ip                = ""
-                  skip_source_dest_check    = true
-                  subnet_id                 = ""
+                  assign_ipv6ip             = lookup(details.value, "assign_ipv6ip")
+                  assign_private_dns_record = lookup(details.value, "assign_private_dns_record")
+                  assign_public_ip          = lookup(details.value, "assign_public_ip")
+                  defined_tags              = merge(var.defined_tags, lookup(details.value, "defined_tags"))
+                  display_name              = lookup(details.value, "display_name")
+                  freeform_tags             = merge(var.freeform_tags, lookup(details.value, "freeform_tags"))
+                  hostname_label            = lookup(details.value, "hostname_label")
+                  nsg_ids                   = [try(element(oci_core_network_security_group.this.*.id, lookup(details.value, "nsg_ids")))]
+                  private_ip                = lookup(details.value, "private_ip")
+                  skip_source_dest_check    = lookup(details.value, "skip_source_dest_check")
+                  subnet_id                 = try(element(oci_core_subnet.this.*.id, lookup(details.value, "subnet_id")))
 
                   dynamic "ipv6address_ipv6subnet_cidr_pair_details" {
-                    for_each = ""
+                    for_each = try(lookup(details.value, "ipv6address_ipv6subnet_cidr_pair_details") == null ? [] : ["ipv6address_ipv6subnet_cidr_pair_details"])
+                    iterator = ipv6
                     content {
-                      ipv6subnet_cidr = ""
-                      ipv6address     = ""
+                      ipv6subnet_cidr = lookup(ipv6.value, "ipv6subnet_cidr")
+                      ipv6address     = lookup(ipv6.value, "ipv6address")
                     }
                   }
                 }
@@ -1359,28 +1375,31 @@ resource "oci_core_instance_configuration" "this" {
       }
 
       dynamic "secondary_vnics" {
-        for_each = ""
+        for_each = try(lookup(instance_details.value, "secondary_vnics") == null ? [] : ["secondary_vnics"])
+        iterator = vnics
         content {
           dynamic "create_vnic_details" {
-            for_each = ""
+            for_each = try(lookup(vnics.value, "create_vnic_details") == null ? [] : ["create_vnic_details"])
+            iterator = details
             content {
-              assign_ipv6ip             = true
-              assign_private_dns_record = true
-              assign_public_ip          = true
-              defined_tags              = {}
-              display_name              = ""
-              freeform_tags             = {}
-              hostname_label            = ""
-              nsg_ids                   = []
-              private_ip                = ""
-              skip_source_dest_check    = true
-              subnet_id                 = ""
+              assign_ipv6ip             = lookup(details.value, "assign_ipv6ip")
+              assign_private_dns_record = lookup(details.value, "assign_private_dns_record")
+              assign_public_ip          = lookup(details.value, "assign_public_ip")
+              defined_tags              = merge(var.defined_tags, lookup(details.value, "defined_tags"))
+              display_name              = lookup(details.value, "display_name")
+              freeform_tags             = merge(var.freeform_tags, lookup(details.value, "freeform_tags"))
+              hostname_label            = lookup(details.value, "hostname_label")
+              nsg_ids                   = [try(element(oci_core_network_security_group.this.*.id, lookup(details.value, "nsg_ids")))]
+              private_ip                = lookup(details.value, "private_ip")
+              skip_source_dest_check    = lookup(details.value, "skip_source_dest_check")
+              subnet_id                 = try(element(oci_core_subnet.this.*.id, lookup(details.value, "subnet_id")))
 
               dynamic "ipv6address_ipv6subnet_cidr_pair_details" {
-                for_each = ""
+                for_each = try(lookup(details.value, "ipv6address_ipv6subnet_cidr_pair_details") == null ? [] : ["ipv6address_ipv6subnet_cidr_pair_details"])
+                iterator = ipv6
                 content {
-                  ipv6subnet_cidr = ""
-                  ipv6address     = ""
+                  ipv6subnet_cidr = lookup(ipv6.value, "ipv6subnet_cidr")
+                  ipv6address     = lookup(ipv6.value, "ipv6address")
                 }
               }
             }
@@ -1392,52 +1411,202 @@ resource "oci_core_instance_configuration" "this" {
 }
 
 resource "oci_core_instance_pool" "this" {
-  compartment_id            = ""
-  instance_configuration_id = ""
-  size                      = 0
+  count                           = (length(var.compartment) && length(var.instance_configuration)) == 0 ? 0 : length(var.instance_pool)
+  compartment_id                  = try(element(module.identity.*.compartment_id, lookup(var.instance_pool[count.index], "compartment_id")))
+  instance_configuration_id       = try(element(oci_core_instance_configuration.this.*.id, lookup(var.instance_pool[count.index], "instance_configuration_id")))
+  size                            = lookup(var.instance_configuration[count.index], "size")
+  defined_tags                    = merge(var.defined_tags, lookup(var.instance_pool[count.index], "defined_tags"))
+  display_name                    = lookup(var.instance_pool[count.index], "display_name")
+  freeform_tags                   = merge(var.freeform_tags, lookup(var.instance_pool[count.index], "freeform_tags"))
+  instance_display_name_formatter = lookup(var.instance_pool[count.index], "instance_display_name_formatter")
+  instance_hostname_formatter     = lookup(var.instance_pool[count.index], "instance_hostname_formatter")
+  state                           = lookup(var.instance_pool[count.index], "state")
+
+  dynamic "load_balancers" {
+    for_each = try(lookup(var.instance_pool[count.index], "load_balancers") == null ? [] : ["load_balancers"])
+    iterator = lb
+    content {
+      backend_set_name = ""
+      load_balancer_id = ""
+      port             = lookup(lb.value, "port")
+      vnic_selection   = lookup(lb.value, "vnic_selection")
+    }
+  }
 
   dynamic "placement_configurations" {
-    for_each = ""
+    for_each = lookup(var.instance_pool[count.index], "placement_configurations")
+    iterator = pc
     content {
-      availability_domain = ""
+      availability_domain = lookup(pc.value, "availability_domain")
+      fault_domains       = lookup(pc.value, "fault_domains")
+      primary_subnet_id   = try(element(oci_core_subnet.this.*.id, lookup(pc.value, "primary_subnet_id")))
+
+      dynamic "primary_vnic_subnets" {
+        for_each = try(lookup(pc.value, "primary_vnic_subnets") == null ? [] : ["primary_vnic_subnets"])
+        iterator = primary
+        content {
+          subnet_id        = try(element(oci_core_subnet.this.*.id, lookup(primary.value, "subnet_id")))
+          is_assign_ipv6ip = lookup(primary.value, "is_assign_ipv6ip")
+
+          dynamic "ipv6address_ipv6subnet_cidr_pair_details" {
+            for_each = try(lookup(primary.value, "ipv6address_ipv6subnet_cidr_pair_details") == null ? [] : ["ipv6address_ipv6subnet_cidr_pair_details"])
+            iterator = ipv6address
+            content {
+              ipv6subnet_cidr = lookup(ipv6address.value, "ipv6subnet_cidr")
+            }
+          }
+        }
+      }
+
+      dynamic "secondary_vnic_subnets" {
+        for_each = try(lookup(pc.value, "secondary_vnic_subnets") == null ? [] : ["secondary_vnic_subnets"])
+        iterator = secondary
+        content {
+          subnet_id    = try(element(oci_core_subnet.this.*.id, lookup(secondary.value, "subnet_id")))
+          display_name = lookup(secondary.value, "display_name")
+
+          dynamic "ipv6address_ipv6subnet_cidr_pair_details" {
+            for_each = try(lookup(secondary.value, "ipv6address_ipv6subnet_cidr_pair_details") == null ? [] : ["ipv6address_ipv6subnet_cidr_pair_details"])
+            iterator = ipv6address
+            content {
+              ipv6subnet_cidr = lookup(ipv6address.value, "ipv6subnet_cidr")
+            }
+          }
+        }
+      }
     }
   }
 }
 
 resource "oci_core_instance_pool_instance" "this" {
-  instance_id      = ""
-  instance_pool_id = ""
+  count            = (length(var.instance) && length(var.instance_pool)) == 0 ? 0 : length(var.instance_pool_instance)
+  instance_id      = try(element(oci_core_instance.this.*.id, lookup(var.instance_pool_instance[count.index], "instance_id")))
+  instance_pool_id = try(element(oci_core_instance_pool.this.*.id, lookup(var.instance_pool_instance[count.index], "instance_pool_id")))
 }
 
 resource "oci_core_internet_gateway" "this" {
-  compartment_id = ""
-  vcn_id         = ""
+  count          = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.internet_gateway)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.internet_gateway[count.index], "compartment_id")))
+  vcn_id         = try(element(oci_core_vcn.this.*.id, lookup(var.internet_gateway[count.index], "vcn_id")))
+  defined_tags   = merge(var.defined_tags, lookup(var.internet_gateway[count.index], "defined_tags"))
+  display_name   = lookup(var.internet_gateway[count.index], "display_name")
+  enabled        = lookup(var.internet_gateway[count.index], "enabled")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.internet_gateway[count.index], "freeform_tags"))
+  route_table_id = try(element(oci_core_route_table.this.*.id, lookup(var.internet_gateway[count.index], "route_table_id")))
 }
 
 resource "oci_core_ipsec" "this" {
-  compartment_id = ""
-  cpe_id         = ""
-  drg_id         = ""
-  static_routes  = []
+  count                     = (length(var.compartment) && length(var.cpe) && length(var.drg)) == 0 ? 0 : length(var.ipsec)
+  compartment_id            = try(element(module.identity.*.compartment_id, lookup(var.ipsec[count.index], "compartment_id")))
+  cpe_id                    = try(element(oci_core_cpe.this.*.id, lookup(var.ipsec[count.index], "cpe_id")))
+  drg_id                    = try(element(oci_core_drg.this.*.id, lookup(var.ipsec[count.index], "drg_id")))
+  static_routes             = lookup(var.ipsec[count.index], "static_routes")
+  cpe_local_identifier      = lookup(var.ipsec[count.index], "cpe_local_identifier")
+  cpe_local_identifier_type = lookup(var.ipsec[count.index], "cpe_local_identifier_type")
+  defined_tags              = merge(var.defined_tags, lookup(var.ipsec[count.index], "defined_tags"))
+  display_name              = lookup(var.ipsec[count.index], "display_name")
+  freeform_tags             = merge(var.freeform_tags, lookup(var.ipsec[count.index], "freeform_tags"))
 }
 
 resource "oci_core_ipsec_connection_tunnel_management" "this" {
-  ipsec_id  = ""
-  tunnel_id = ""
+  count                   = (length(var.ipsec) && length(var.ipsec_connection_tunnels) && length(var.ipsec_connection_tunnel)) == 0 ? 0 : length(var.ipsec_connection_tunnel_management)
+  ipsec_id                = try(element(oci_core_ipsec.this.*.id, lookup(var.ipsec_connection_tunnel_management[count.index], "ipsec_id")))
+  tunnel_id               = try(element(data.oci_core_ipsec_connection_tunnels.this.*.ip_sec_connection_tunnels[0].id, lookup(var.ipsec_connection_tunnel_management[count.index], "tunnel_id")))
+  display_name            = lookup(var.ipsec_connection_tunnel_management[count.index], "display_name")
+  shared_secret           = lookup(var.ipsec_connection_tunnel_management[count.index], "shared_secret")
+  ike_version             = lookup(var.ipsec_connection_tunnel_management[count.index], "ike_version")
+  routing                 = lookup(var.ipsec_connection_tunnel_management[count.index], "routing")
+  nat_translation_enabled = lookup(var.ipsec_connection_tunnel_management[count.index], "nat_translation_enabled")
+  oracle_can_initiate     = lookup(var.ipsec_connection_tunnel_management[count.index], "oracle_can_initiate")
+
+
+  dynamic "bgp_session_info" {
+    for_each = try(lookup(var.ipsec_connection_tunnel_management[count.index], "bgp_session_info") == null ? [] : ["bgp_session_info"])
+    iterator = bgp
+    content {
+      customer_bgp_asn        = lookup(bgp.value, "customer_bgp_asn")
+      customer_interface_ip   = lookup(bgp.value, "customer_interface_ip")
+      customer_interface_ipv6 = lookup(bgp.value, "customer_interface_ipv6")
+      oracle_interface_ip     = lookup(bgp.value, "oracle_interface_ip")
+      oracle_interface_ipv6   = lookup(bgp.value, "oracle_interface_ipv6")
+    }
+  }
+
+  dynamic "dpd_config" {
+    for_each = try(lookup(var.ipsec_connection_tunnel_management[count.index], "dpd_config") == null ? [] : ["dpd_config"])
+    iterator = dpd
+    content {
+      dpd_mode           = lookup(dpd.value, "dpd_mode")
+      dpd_timeout_in_sec = lookup(dpd.value, "dpd_timeout_in_sec")
+    }
+  }
+
+  dynamic "encryption_domain_config" {
+    for_each = try(lookup(var.ipsec_connection_tunnel_management[count.index], "encryption_domain_config") == null ? [] : ["encryption_domain_config"])
+    iterator = encryption
+    content {
+      cpe_traffic_selector    = lookup(encryption.value, "cpe_traffic_selector")
+      oracle_traffic_selector = lookup(encryption.value, "oracle_traffic_selector")
+    }
+  }
+
+  dynamic "phase_one_details" {
+    for_each = try(lookup(var.ipsec_connection_tunnel_management[count.index], "phase_one_details") == null ? [] : ["phase_one_details"])
+    iterator = one
+    content {
+      custom_authentication_algorithm = lookup(one.value, "custom_authentication_algorithm")
+      custom_dh_group                 = lookup(one.value, "custom_dh_group")
+      custom_encryption_algorithm     = lookup(one.value, "custom_encryption_algorithm")
+      is_custom_phase_one_config      = lookup(one.value, "is_custom_phase_one_config")
+      lifetime                        = lookup(one.value, "lifetime")
+    }
+  }
+
+  dynamic "phase_two_details" {
+    for_each = try(lookup(var.ipsec_connection_tunnel_management[count.index], "phase_two_details") == null ? [] : ["phase_two_details"])
+    iterator = two
+    content {
+      custom_authentication_algorithm = lookup(two.value, "custom_authentication_algorithm")
+      custom_encryption_algorithm     = lookup(two.value, "custom_encryption_algorithm")
+      dh_group                        = lookup(two.value, "dh_group")
+      is_custom_phase_two_config      = lookup(two.value, "is_custom_phase_two_config")
+      is_pfs_enabled                  = lookup(two.value, "is_pfs_enabled")
+      lifetime                        = lookup(two.value, "lifetime")
+    }
+  }
 }
 
 resource "oci_core_ipv6" "this" {
-  vnic_id = ""
+  count           = length(var.vnic_attachment) == 0 ? 0 : length(var.ipv6)
+  vnic_id         = try(element(oci_core_vnic_attachment.this.*.id, lookup(var.ipv6[count.index], "vnic_id")))
+  defined_tags    = merge(var.defined_tags, lookup(var.ipv6[count.index], "defined_tags"))
+  display_name    = lookup(var.ipv6[count.index], "display_name")
+  freeform_tags   = merge(var.freeform_tags, lookup(var.ipv6[count.index], "freeform_tags"))
+  ip_address      = lookup(var.ipv6[count.index], "ip_address")
+  ipv6subnet_cidr = lookup(var.ipv6[count.index], "ipv6subnet_cidr")
 }
 
 resource "oci_core_local_peering_gateway" "this" {
-  compartment_id = ""
-  vcn_id         = ""
+  count          = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.local_peering_gateway)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.local_peering_gateway[count.index], "compartment_id")))
+  vcn_id         = try(element(oci_core_vcn.this.*.id, lookup(var.local_peering_gateway[count.index], "vcn_id")))
+  defined_tags   = merge(var.defined_tags, lookup(var.local_peering_gateway[count.index], "defined_tags"))
+  display_name   = lookup(var.local_peering_gateway[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.local_peering_gateway[count.index], "freeform_tags"))
+  peer_id        = try(element(oci_core_local_peering_gateway.this.*.id, lookup(var.local_peering_gateway[count.index], "peer_id")))
+  route_table_id = try(element(oci_core_route_table.this.*.id, lookup(var.local_peering_gateway[count.index], "route_table_id")))
 }
 
 resource "oci_core_nat_gateway" "this" {
-  compartment_id = ""
-  vcn_id         = ""
+  count          = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.nat_gateway)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.nat_gateway[count.index], "compartment_id")))
+  vcn_id         = try(element(oci_core_vcn.this.*.id, lookup(var.nat_gateway[count.index], "vcn_id")))
+  block_traffic  = lookup(var.nat_gateway[count.index], "block_traffic")
+  defined_tags   = merge(var.defined_tags, lookup(var.nat_gateway[count.index], "defined_tags"))
+  display_name   = lookup(var.nat_gateway[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.nat_gateway[count.index], "freeform_tags"))
+  public_ip_id   = try(element(oci_core_public_ip.this.*.id, lookup(var.nat_gateway[count.index], "public_ip_id")))
+  route_table_id = try(element(oci_core_route_table.this.*.id, lookup(var.nat_gateway[count.index], "route_table_id")))
 }
 
 resource "oci_core_network_security_group" "this" {
@@ -1542,7 +1711,7 @@ resource "oci_core_vnic_attachment" "this" {
   }
 }
 
-resource "oci_core_volume" "his" {
+resource "oci_core_volume" "this" {
   availability_domain = ""
   compartment_id      = ""
 }
