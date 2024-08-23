@@ -621,3 +621,289 @@ output "public_ip_id_ip_address" {
     join(":", [oci_core_public_ip.this.*.id, oci_core_public_ip.this.*.ip_address])
   )
 }
+
+## PUBLIC IP POOL
+
+output "public_ip_pool_id" {
+  value = try(
+    oci_core_public_ip_pool.this.*.id
+  )
+}
+
+output "public_ip_pool_display_name" {
+  value = try(
+    oci_core_public_ip_pool.this.*.display_name
+  )
+}
+
+## REMOTE PEERING CONNECTION
+
+output "remote_peering_connection_id" {
+  value = try(
+    oci_core_remote_peering_connection.this.*.id
+  )
+}
+
+output "remote_peering_connection_display_name" {
+  value = try(
+    oci_core_remote_peering_connection.this.*.display_name
+  )
+}
+
+## ROUTE TABLE
+
+output "route_table_id" {
+  value = try(
+    oci_core_route_table.this.*.id
+  )
+}
+
+output "route_table_display_name" {
+  value = try(
+    oci_core_route_table.this.*.display_name
+  )
+}
+
+## ROUTE TABLE ATTACHMENT
+
+output "route_table_attachment_id" {
+  value = try(
+    oci_core_route_table_attachment.this.*.id
+  )
+}
+
+output "route_table_attachment_to_route_table_id" {
+  value = try(
+    oci_core_route_table_attachment.this.*.route_table_id
+  )
+}
+
+## SECURITY LIST
+
+output "security_list_id" {
+  value = try(
+    oci_core_security_list.this.*.id
+  )
+}
+
+output "security_list_display_name" {
+  value = try(
+    oci_core_security_list.this.*.display_name
+  )
+}
+
+## SERVICE GATEWAY
+
+output "service_gateway_id" {
+  value = try(
+    oci_core_service_gateway.this.*.id
+  )
+}
+
+output "service_gateway_display_name" {
+  value = try(
+    oci_core_service_gateway.this.*.display_name
+  )
+}
+
+## SHAPE MANAGEMENT
+
+output "shape_management_id" {
+  value = try(
+    oci_core_shape_management.this.*.id
+  )
+}
+
+## SUBNET
+
+output "subnet_id" {
+  value = try(
+    oci_core_subnet.this.*.id
+  )
+}
+
+output "subnet_display_name" {
+  value = try(
+    oci_core_subnet.this.*.display_name
+  )
+}
+
+## VCN
+
+output "vcn_id" {
+  value = try(
+    oci_core_vcn.this.*.id
+  )
+}
+
+output "vcn_display_name" {
+  value = try(
+    oci_core_vcn.this.*.display_name
+  )
+}
+
+## VIRTUAL CIRCUIT
+
+output "virtual_circuit_id" {
+  value = try(
+    oci_core_virtual_circuit.name.*.id
+  )
+}
+
+output "virtual_circuit_display_name" {
+  value = try(
+    oci_core_virtual_circuit.name.*.display_name
+  )
+}
+
+## VLAN
+
+output "vlan_id" {
+  value = try(
+    oci_core_vlan.this.*.id
+  )
+}
+
+output "vlan_display_name" {
+  value = try(
+    oci_core_vlan.this.*.display_name
+  )
+}
+
+output "vlan_state" {
+  value = try(
+    oci_core_vlan.this.*.state
+  )
+}
+
+output "vlan_route_table_id" {
+  value = try(
+    oci_core_vlan.this.*.route_table_id
+  )
+}
+
+output "vlan_cidr_block" {
+  value = try(
+    oci_core_vlan.this.*.cidr_block
+  )
+}
+
+output "vlan_tag" {
+  value = try(
+    oci_core_vlan.this.*.vlan_tag
+  )
+}
+
+## VNIC ATTACHMENT
+
+output "vnic_attachment_id" {
+  value = try(
+    oci_core_vnic_attachment.this.*.id
+  )
+}
+
+## VOLUME
+
+output "volume_id" {
+  value = try(
+    oci_core_volume.this.*.id
+  )
+}
+
+output "volume_display_name" {
+  value = try(
+    oci_core_volume.this.*.display_name
+  )
+}
+
+## VOLUME ATTACHMENT
+
+output "volume_attachment_id" {
+  value = try(
+    oci_core_volume_attachment.this.*.id
+  )
+}
+
+output "volume_attachment_display_name" {
+  value = try(
+    oci_core_volume_attachment.this.*.display_name
+  )
+}
+
+## VOLUME BACKUP
+
+output "volume_backup_id" {
+  value = try(
+    oci_core_volume_backup.this.*.id
+  )
+}
+
+output "volume_backup_display_name" {
+  value = try(
+    oci_core_volume_backup.this.*.display_name
+  )
+}
+
+## VOLUME BACKUP POLICY
+
+output "volume_backup_policy_id" {
+  value = try(
+    oci_core_volume_backup_policy.this.*.id
+  )
+}
+
+output "volume_backup_policy_display_name" {
+  value = try(
+    oci_core_volume_backup_policy.this.*.display_name
+  )
+}
+
+## VOLUME BACKUP POLICY ASSIGNMENT
+
+output "volume_backup_policy_assignment_id" {
+  value = try(
+    oci_core_volume_backup_policy_assignment.this.*.id
+  )
+}
+
+## VOLUME GROUP
+
+output "volume_group_id" {
+  value = try(
+    oci_core_volume_group.this.*.id
+  )
+}
+
+output "volume_group_display_name" {
+  value = try(
+    oci_core_volume_group.this.*.display_name
+  )
+}
+
+## VOLUME GROUP BACKUP
+
+output "volume_group_backup_id" {
+  value = try(
+    oci_core_volume_group_backup.this.*.id
+  )
+}
+
+output "volume_group_backup_display_name" {
+  value = try(
+    oci_core_volume_group_backup.this.*.display_name
+  )
+}
+
+## VTAP
+
+output "vtap_id" {
+  value       = try(
+    oci_core_vtap.this.*.id
+  )
+}
+
+output "vtap_display_name" {
+  value       = try(
+    oci_core_vtap.this.*.display_name
+  )
+}

@@ -1763,8 +1763,125 @@ resource "oci_core_route_table_attachment" "this" {
 }
 
 resource "oci_core_security_list" "this" {
-  compartment_id = ""
-  vcn_id         = ""
+  count          = (length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.security_list)
+  compartment_id = try(element(module.identity.*.compartment_id, lookup(var.security_list[count.index], "compartment_id")))
+  vcn_id         = try(element(oci_core_vcn.this.*.id, lookup(var.security_list[count.index], "vcn_id")))
+  defined_tags   = merge(var.defined_tags, lookup(var.security_list[count.index], "defined_tags"))
+  display_name   = lookup(var.security_list[count.index], "display_name")
+  freeform_tags  = merge(var.freeform_tags, lookup(var.security_list[count.index], "freeform_tags"))
+
+  dynamic "egress_security_rules" {
+    for_each = try(lookup(var.security_list[count.index], "egress_security_rules") == null ? [] : ["egress_security_rules"])
+    iterator = egress
+    content {
+      destination      = lookup(egress.value, "destination")
+      protocol         = lookup(egress.value, "protocol")
+      description      = lookup(egress.value, "description")
+      destination_type = lookup(egress.value, "destination_type")
+
+      dynamic "icmp_options" {
+        for_each = try(lookup(egress.value, "icmp_options") == null ? [] : ["icmp_options"])
+        iterator = icmp
+        content {
+          type = lookup(icmp.value, "type")
+          code = lookup(icmp.value, "code")
+        }
+      }
+
+      dynamic "tcp_options" {
+        for_each = try(lookup(egress.value, "tcp_options") == null ? [] : ["tcp_options"])
+        iterator = tcp
+        content {
+          max = lookup(tcp.value, "max")
+          min = lookup(tcp.value, "min")
+
+          dynamic "source_port_range" {
+            for_each = try(lookup(tcp.value, "source_port_range") == null ? [] : ["source_port_range"])
+            iterator = source
+            content {
+              max = lookup(source.value, "max")
+              min = lookup(source.value, "min")
+            }
+          }
+        }
+      }
+
+      dynamic "udp_options" {
+        for_each = try(lookup(egress.value, "udp_options") == null ? [] : ["udp_options"])
+        iterator = udp
+        content {
+          max = lookup(udp.value, "max")
+          min = lookup(udp.value, "min")
+
+          dynamic "source_port_range" {
+            for_each = try(lookup(udp.value, "source_port_range") == null ? [] : ["source_port_range"])
+            iterator = source
+            content {
+              max = lookup(source.value, "max")
+              min = lookup(source.value, "min")
+            }
+          }
+        }
+      }
+    }
+  }
+
+  dynamic "ingress_security_rules" {
+    for_each = try(lookup(var.security_list[count.index], "ingress_security_rules") == null ? [] : ["ingress_security_rules"])
+    iterator = ingress
+    content {
+      protocol    = lookup(ingress.value, "protocol")
+      source      = lookup(ingress.value, "source")
+      description = lookup(ingress.value, "description")
+      source_type = lookup(ingress.value, "source_type")
+      stateless   = lookup(ingress.value, "stateless")
+
+      dynamic "icmp_options" {
+        for_each = try(lookup(ingress.value, "icmp_options") == null ? [] : ["icmp_options"])
+        iterator = icmp
+        content {
+          type = lookup(icmp.value, "type")
+          code = lookup(icmp.value, "code")
+        }
+      }
+
+      dynamic "tcp_options" {
+        for_each = try(lookup(ingress.value, "tcp_options") == null ? [] : ["tcp_options"])
+        iterator = tcp
+        content {
+          max = lookup(tcp.value, "max")
+          min = lookup(tcp.value, "min")
+
+          dynamic "source_port_range" {
+            for_each = try(lookup(tcp.value, "source_port_range") == null ? [] : ["source_port_range"])
+            iterator = source
+            content {
+              max = lookup(source.value, "max")
+              min = lookup(source.value, "min")
+            }
+          }
+        }
+      }
+
+      dynamic "udp_options" {
+        for_each = try(lookup(ingress.value, "udp_options") == null ? [] : ["udp_options"])
+        iterator = udp
+        content {
+          max = lookup(udp.value, "max")
+          min = lookup(udp.value, "min")
+
+          dynamic "source_port_range" {
+            for_each = try(lookup(udp.value, "source_port_range") == null ? [] : ["source_port_range"])
+            iterator = source
+            content {
+              max = lookup(source.value, "max")
+              min = lookup(source.value, "min")
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 resource "oci_core_service_gateway" "this" {
@@ -1991,31 +2108,95 @@ resource "oci_core_volume_backup" "this" {
 }
 
 resource "oci_core_volume_backup_policy" "this" {
-  compartment_id = ""
-}
+  count              = length(var.compartment) == 0 ? 0 : length(var.volume_backup_policy)
+  compartment_id     = try(element(module.identity.*.compartment_id, lookup(var.volume_backup_policy[count.index], "compartment_id")))
+  defined_tags       = merge(var.defined_tags, lookup(var.volume_backup_policy[count.index], "defined_tags"))
+  destination_region = lookup(var.volume_backup_policy[count.index], "destination_region")
+  display_name       = lookup(var.volume_backup_policy[count.index], "display_name")
+  freeform_tags      = merge(var.defined_tags, lookup(var.volume_backup_policy[count.index], "freeform_tags"))
 
-resource "oci_core_volume_backup_policy_assignment" "this" {
-  asset_id  = ""
-  policy_id = ""
-}
-
-resource "oci_core_volume_group" "this" {
-  availability_domain = ""
-  compartment_id      = ""
-
-  dynamic "source_details" {
-    for_each = ""
+  dynamic "schedules" {
+    for_each = try(lookup(var.volume_backup_policy[count.index], "schedules") == null ? [] : ["schedules"])
     content {
-      type = ""
+      backup_type       = lookup(schedules.value, "backup_type")
+      period            = lookup(schedules.value, "period")
+      retention_seconds = lookup(schedules.value, "retention_seconds")
+      day_of_month      = lookup(schedules.value, "day_of_month")
+      day_of_week       = lookup(schedules.value, "day_of_week")
+      hour_of_day       = lookup(schedules.value, "hour_of_day")
+      offset_seconds    = lookup(schedules.value, "offset_seconds")
+      offset_type       = lookup(schedules.value, "offset_type")
+      time_zone         = lookup(schedules.value, "time_zone")
     }
   }
 }
 
-resource "oci_core_volume_group_backup" "this" {}
+resource "oci_core_volume_backup_policy_assignment" "this" {
+  count     = (length(var.volume) && length(var.volume_backup_policy)) == 0 ? 0 : length(var.volume_backup_policy_assignment)
+  asset_id  = try(element(oci_core_volume.this.*.id, lookup(var.volume_backup_policy_assignment[count.index], "asset_id")))
+  policy_id = try(element(oci_core_volume_backup_policy.this.*.id, lookup(var.volume_backup_policy_assignment[count.index], "policy_id")))
+}
+
+resource "oci_core_volume_group" "this" {
+  count                      = length(var.compartment) == 0 ? 0 : length(var.volume_group)
+  availability_domain        = lookup(var.volume_group[count.index], "availability_domain")
+  compartment_id             = try(element(module.identity.*.compartment_id, lookup(var.volume_group[count.index], "compartment_id")))
+  cluster_placement_group_id = try(element(module.identity.*.group_id, lookup(var.volume_group[count.index], "cluster_placement_group_id")))
+  defined_tags               = merge(var.defined_tags, lookup(var.volume_group[count.index], "defined_tags"))
+  display_name               = lookup(var.volume_group[count.index], "display_name")
+  freeform_tags              = merge(var.defined_tags, lookup(var.volume_group[count.index], "freeform_tags"))
+  volume_ids                 = [try(element(oci_core_volume.this.*.id, lookup(var.volume_group[count.index], "volume_ids")))]
+
+  dynamic "source_details" {
+    for_each = lookup(var.volume_group[count.index], "source_details")
+    iterator = source
+    content {
+      type                   = lookup(source.value, "type")
+      volume_group_backup_id = try(element(oci_core_volume_group_backup.this.*.id, lookup(source.value, "volume_group_backup_id")))
+      volume_group_id        = try(element(oci_core_volume_group.this.*.id, lookup(source.value, "volume_group_id")))
+      #volume_group_replica_id = ""
+      volume_ids = [try(element(oci_core_volume.this.*.id, lookup(source.value, "volume_ids")))]
+    }
+  }
+
+  dynamic "volume_group_replicas" {
+    for_each = try(lookup(var.volume_group[count.index], "volume_group_replicas") == null ? [] : ["volume_group_replicas"])
+    iterator = replicas
+    content {
+      availability_domain = lookup(replicas.value, "availability_domain")
+      display_name        = lookup(replicas.value, "display_name")
+    }
+  }
+}
+
+resource "oci_core_volume_group_backup" "this" {
+  count           = length(var.volume_group_backup)
+  volume_group_id = try(element(module.identity.*.compartment_id, lookup(var.volume_group_backup[count.index], "volume_group_id")))
+  compartment_id  = try(element(oci_core_volume_group.this.*.id, lookup(var.volume_group_backup[count.index], "compartment_id")))
+  defined_tags    = merge(var.defined_tags, lookup(var.volume_group_backup[count.index], "defined_tags"))
+  display_name    = lookup(var.volume_group_backup[count.index], "display_name")
+  freeform_tags   = merge(var.freeform_tags, lookup(var.volume_group_backup[count.index], "freeform_tags"))
+  type            = lookup(var.volume_group_backup[count.index], "type")
+}
 
 resource "oci_core_vtap" "this" {
-  capture_filter_id = ""
-  compartment_id    = ""
-  source_id         = ""
-  vcn_id            = ""
+  count                             = (length(var.capture_filter) && length(var.compartment) && length(var.vcn)) == 0 ? 0 : length(var.vtap)
+  capture_filter_id                 = try(element(oci_core_capture_filter.this.*.id, lookup(var.vtap[count.index], "capture_filter_id")))
+  compartment_id                    = try(element(module.identity.*.compartment_id, lookup(var.vtap[count.index], "compartment_id")))
+  source_id                         = lookup(var.vtap[count.index], "source_id")
+  vcn_id                            = try(element(oci_core_vcn.this.*.id, lookup(var.vtap[count.index], "vcn_id")))
+  defined_tags                      = merge(var.defined_tags, lookup(var.vtap[count.index], "defined_tags"))
+  display_name                      = lookup(var.vtap[count.index], "display_name")
+  encapsulation_protocol            = lookup(var.vtap[count.index], "encapsulation_protocol")
+  freeform_tags                     = merge(var.freeform_tags, lookup(var.vtap[count.index], "freeform_tags"))
+  is_vtap_enabled                   = lookup(var.vtap[count.index], "is_vtap_enabled")
+  max_packet_size                   = lookup(var.vtap[count.index], "max_packet_size")
+  source_private_endpoint_ip        = lookup(var.vtap[count.index], "source_private_endpoint_ip")
+  source_private_endpoint_subnet_id = try(element(oci_core_subnet.this.*.id, lookup(var.vtap[count.index], "source_private_endpoint_subnet_id")))
+  source_type                       = lookup(var.vtap[count.index], "source_type")
+  #target_id                         = ""
+  target_ip                = lookup(var.vtap[count.index], "target_ip")
+  target_type              = lookup(var.vtap[count.index], "target_type")
+  traffic_mode             = lookup(var.vtap[count.index], "traffic_mode")
+  vxlan_network_identifier = lookup(var.vtap[count.index], "vxlan_network_identifier")
 }

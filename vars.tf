@@ -721,7 +721,6 @@ variable "instance" {
     })))
     source_details = optional(list(object({
       source_type                     = string
-      source_type                     = optional(string)
       source_id                       = optional(string)
       boot_volume_size_in_gbs         = optional(string)
       boot_volume_vpus_per_gb         = optional(string)
@@ -954,7 +953,6 @@ variable "instance_configuration" {
         })))
         source_details = optional(list(object({
           source_type                     = string
-          source_type                     = optional(string)
           source_id                       = optional(string)
           boot_volume_size_in_gbs         = optional(string)
           boot_volume_vpus_per_gb         = optional(string)
@@ -1107,7 +1105,6 @@ variable "instance_configuration" {
           })))
           source_details = optional(list(object({
             source_type                     = string
-            source_type                     = optional(string)
             source_id                       = optional(string)
             boot_volume_size_in_gbs         = optional(string)
             boot_volume_vpus_per_gb         = optional(string)
@@ -1484,6 +1481,64 @@ variable "route_table_attachment" {
 variable "security_list" {
   type = list(object({
     id = number
+    compartment_id = any
+    vcn_id         = any
+    defined_tags   = optional(map(string))
+    display_name   = optional(string)
+    freeform_tags = optional(map(string))
+    egress_security_rules = optional(list(object({
+      destination      = string
+      protocol         = string
+      description      = optional(string)
+      destination_type = optional(string)
+      icmp_options = optional(list(object({
+        type = number
+        code = optional(number)
+      })))
+      tcp_options = optional(list(object({
+        max = optional(number)
+        min = optional(number)
+        source_port_range = optional(list(object({
+          max = number
+          min = number
+        })))
+      })))
+      udp_options = optional(list(object({
+        max = optional(number)
+        min = optional(number)
+        source_port_range = optional(list(object({
+          max = number
+          min = number
+        })))
+      })))
+    })))
+    ingress_security_rules = optional(list(object({
+      protocol    = string
+      source      = string
+      description = optional(string)
+      source_type = optional(string)
+      stateless   = optional(bool)
+      icmp_options = optional(list(object({
+        type = number
+        code = optional(number)
+      })))
+      tcp_options = optional(list(object({
+        max = optional(number)
+        min = optional(number)
+        source_port_range = optional(list(object({
+          max = number
+          min = number
+        })))
+      })))
+      udp_options = optional(list(object({
+        max = optional(number)
+        min = optional(number)
+        source_port_range = optional(list(object({
+          max = number
+          min = number
+        })))
+      })))
+    })))
   }))
   default = []
 }
@@ -1696,35 +1751,95 @@ variable "volume_backup" {
 
 variable "volume_backup_policy" {
   type = list(object({
-    id = number
+    id                 = number
+    compartment_id     = any
+    defined_tags       = optional(map(string))
+    destination_region = optional(string)
+    display_name       = optional(string)
+    freeform_tags      = optional(map(string))
+    schedules = optional(list(object({
+      backup_type       = string
+      period            = string
+      retention_seconds = number
+      day_of_month      = optional(number)
+      day_of_week       = optional(string)
+      hour_of_day       = optional(number)
+      offset_seconds    = optional(number)
+      offset_type       = optional(string)
+      time_zone         = optional(string)
+    })))
   }))
   default = []
 }
 
 variable "volume_backup_policy_assignment" {
   type = list(object({
-    id = number
+    id        = number
+    asset_id  = any
+    policy_id = any
   }))
   default = []
 }
 
 variable "volume_group" {
   type = list(object({
-    id = number
+    id                         = number
+    availability_domain        = string
+    compartment_id             = any
+    cluster_placement_group_id = optional(any)
+    defined_tags               = optional(map(string))
+    display_name               = optional(string)
+    freeform_tags              = optional(map(string))
+    volume_ids                 = optional(any)
+    source_details = list(object({
+      type                    = string
+      volume_group_backup_id  = optional(any)
+      volume_group_id         = optional(any)
+      volume_group_replica_id = optional(any)
+      volume_ids              = optional(list(any))
+    }))
+    volume_group_replicas = optional(list(object({
+      availability_domain = string
+      display_name        = optional(string)
+    })))
   }))
   default = []
 }
 
 variable "volume_group_backup" {
   type = list(object({
-    id = number
+    id              = number
+    volume_group_id = optional(any)
+    compartment_id  = optional(any)
+    defined_tags    = optional(map(string))
+    display_name    = optional(string)
+    freeform_tags   = optional(map(string))
+    type            = optional(string)
   }))
   default = []
 }
 
 variable "vtap" {
   type = list(object({
-    id = number
+    id                                = number
+    capture_filter_id                 = any
+    compartment_id                    = any
+    source_id                         = string
+    vcn_id                            = any
+    defined_tags                      = optional(map(string))
+    display_name                      = optional(string)
+    encapsulation_protocol            = optional(string)
+    freeform_tags                     = optional(map(string))
+    is_vtap_enabled                   = optional(bool)
+    max_packet_size                   = optional(number)
+    source_private_endpoint_ip        = optional(string)
+    source_private_endpoint_subnet_id = optional(any)
+    source_type                       = optional(string)
+    target_id                         = optional(any)
+    target_ip                         = optional(string)
+    target_type                       = optional(string)
+    traffic_mode                      = optional(string)
+    vxlan_network_identifier          = optional(string)
   }))
   default = []
 }
